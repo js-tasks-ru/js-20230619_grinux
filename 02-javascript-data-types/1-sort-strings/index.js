@@ -9,9 +9,7 @@ export function sortStrings(arr, param = 'asc') {
   sorted.sort((a, b) => {
     if (a === b)
       return 0;
-    if (a.toLowerCase() === b.toLowerCase())
-      return -a.localeCompare(b);
-    return a.localeCompare(b);
+    return a.localeCompare(b, ['ru-RU'], {caseFirst: 'upper'});
   });
   if (param === 'desc')
     sorted.reverse();
