@@ -7,14 +7,10 @@
 export function sortStrings(arr, param = 'asc') {
   let sorted = [...arr];
   sorted.sort((a, b) => {
-    if (a === b)
-      return 0;
-    return a.localeCompare(b, ['ru-RU'], {caseFirst: 'upper'});
+    return param === 'asc' ? 
+       a.localeCompare(b, ['ru-RU'], {caseFirst: 'upper'}) :
+      -a.localeCompare(b, ['ru-RU'], {caseFirst: 'upper'})
   });
-  if (param === 'desc')
-    sorted.reverse();
-  else if (param !== 'asc')
-    console.log(`Unknown sorting method. Default 'asc' apllied`);
   //console.log(`Input: `, arr, `\r Sorted: `, sorted);  
   return sorted;
 }
