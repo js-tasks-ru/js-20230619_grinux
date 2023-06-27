@@ -6,10 +6,6 @@
  */
 
 export const omit = (obj, ...fields) => {
-  let result = { ...obj }
-  for (let field of fields) {
-    if (obj[field])
-      delete result[field];
-  }
-  return result;
+  return Object.fromEntries(Object.entries(obj)
+    .filter(entry => !fields.includes(entry[0])));
 };
