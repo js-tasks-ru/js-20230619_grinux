@@ -8,14 +8,5 @@
 export const pick = (obj, ...fields) => {
   return Object.fromEntries(Object.entries(obj)
     .filter(entry => fields.includes(entry[0])));
-};
+}
 
-//сперва сделал  так:
-export const pick1 = (obj, ...fields) => {
-  let result = {};
-  for (let field of fields) {
-    if (obj[field])
-      result[field] = obj[field];
-  }
-  return result;
-};
