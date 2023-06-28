@@ -14,19 +14,3 @@ export function createGetter(path) {
     return obj[child];
   };
 }
-  // let major_path;
-  // let dot = path.indexOf('.'); 
-  // if (dot)
-
-  // const product = {
-  //   category: {
-  //     title: "Goods"
-  //   }
-  // }
-
-  // const obj = { 
-  // };
-  
-  // const getter = createGetter('src');
-  
-  // console.log(getter(obj)); // Goods
