@@ -4,7 +4,7 @@
  * @returns {object | undefined} - returns new object or undefined if nothing did't pass
  */
 export function invertObj(obj) {
-  if (!obj)
+  if (typeof obj !== 'object')
     return;
   const props = Object.entries(obj);
   props.forEach(prop => {
@@ -14,9 +14,10 @@ export function invertObj(obj) {
 }
 
 export function invertObj1(obj) {
-  return obj ?
-    Object
-      .fromEntries(Object
-        .entries(obj)
-        .map(([key, value]) => [value, key])) : undefined;
+  if (typeof obj !== 'object')
+    return; 
+  return Object
+            .fromEntries(Object
+              .entries(obj)
+              .map(([key, value]) => [value, key]));
 }
