@@ -5,9 +5,9 @@
  */
 export function invertObj(obj) {
   if (!obj)
-    return undefined;
+    return;
   const props = Object.entries(obj);
-  props.map(prop => {
+  props.forEach(prop => {
     [prop[0], prop[1]] = [prop[1], prop[0]];
   });
   return Object.fromEntries(props);
