@@ -7,7 +7,7 @@ export function createGetter(path) {
   path = path.split('.');
   return function get_prop(obj) {
     if (Object.keys(obj).length === 0)
-      return undefined;
+      return;
     let child = path.shift();
     if (path.length)
       return get_prop(obj[child]);
