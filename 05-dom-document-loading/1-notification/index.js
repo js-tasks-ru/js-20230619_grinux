@@ -1,17 +1,24 @@
 export default class NotificationMessage {
-  constructor (title, opt = {})
-  {
-    this.element = createElement(`
-      <div class="notification" style="--value:20s">
-        <div class="timer"></div>
-        <div class="inner-wrapper">
-          <div class="notification-header"></div>
-          <div class="notification-body"></div>
-        </div>
+  constructor(title, opt = {}) {
+    this.build(title);
+    this.set_opt(opt);
+  }
+
+  build(title) {
+    this.element = this.create_element(`
+    <div class="notification" style="--value:20s">
+      <div class="timer"></div>
+      <div class="inner-wrapper">
+        <div class="notification-header"></div>
+        <div class="notification-body"></div>
       </div>
-    `);
+    </div>
+  `);
     this.element.querySelector('.notification-body').innerText = title;
     this.element.insertAdjacentText('afterbegin', title);
+  }
+
+  set_opt(opt) {
     if (opt.duration) {
       this.element.style.setProperty('--value', opt.duration / 1000 + 's');
       this.duration = opt.duration;
@@ -22,13 +29,17 @@ export default class NotificationMessage {
     }
   }
 
-  destroy()
-  {
+  create_element(html) {
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    return div.firstElementChild;
+  }
+
+  destroy() {
     this.remove();
   }
 
-  remove()
-  {
+  remove() {
     this.element.remove();
   }
 
@@ -46,15 +57,9 @@ export default class NotificationMessage {
     document.body.addEventListener('new-msg', () => {
       this.remove();
     });
-    
+
     setTimeout(() => {
       this.remove();
     }, this.duration - 50); //если тут сделать меньшую поправку, то окно
   }                         //успевает моргнуть. Как правильно?
 }
-
-function createElement(html) {
-  const div = document.createElement('div');
-  div.innerHTML = html;
-  return div.firstElementChild;
-};

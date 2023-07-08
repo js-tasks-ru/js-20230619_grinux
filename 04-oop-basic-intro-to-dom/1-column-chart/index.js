@@ -1,20 +1,25 @@
 export default class ColumnChart {
-  constructor(chart_data)
+  
+  chartHeight = 50;
+
+  constructor(chart_data = {})
   {
-    this.element = createElement(`
-      <div class="column-chart" style="--chart-height: 50">
+    this.build(chart_data);
+    this.update(chart_data.data);
+  }
+
+  build(chart_data)
+  {
+    this.element = this.create_element(`
+      <div class="column-chart column-chart_loading" style="--chart-height: 50">
         <div class="column-chart__title"></div>
         <div class="column-chart__container">
           <div data-element="header" class="column-chart__header"></div>
-          <div data-element="body" class="column-chart__chart">
-
-          </div>
+          <div data-element="body" class="column-chart__chart"></div>
+        </div>    
       </div>
     `);
-    this.chartHeight = 50;//this.element.style.getPropertyValue('--chart-height');
-    this.element.classList.add('column-chart_loading');
-    if (!chart_data)
-      return;
+    this.chart = this.element.querySelector('.column-chart__chart');
     this.chart_data = chart_data;
     if (this.chart_data.label) {
       this.element.querySelector('.column-chart__title').innerText = this.chart_data.label;
@@ -31,20 +36,18 @@ export default class ColumnChart {
         .insertAdjacentHTML('beforeend', `
         <a href="/${this.chart_data.link}" class="column-chart__link">View all</a>
         `);
-    this.update(this.chart_data.data);
   }
 
-  update(data) {
-    if (data && data.length)
+  update(data = []) {
+    this.chart_data.data = data;
+    this.chart.innerHTML = '';
+    if (data.length)
     {
-      const max_data = Math.max(...data);
-      for (let data_val of data) {
-        //-- Тесты требуют разного округления для значений и процентов. 
-        //-- Потеря времени на разборки
+      const max_data = Math.max(...this.chart_data.data);
+      for (let data_val of this.chart_data.data) {
         const value = Math.floor(data_val * this.chartHeight / max_data);
         const percnt = Math.round(data_val * 100 / max_data);
-        this.element.querySelector('.column-chart__chart')
-                    .appendChild(createElement(`
+        this.chart.appendChild(this.create_element(`
         <div style="--value: ${value}" data-tooltip="${percnt}%"></div>
         `));
       }
@@ -55,7 +58,12 @@ export default class ColumnChart {
     }
   }
 
-  //-- Непонятно требование теста о наличии двух одинаковых методов
+  create_element(html) {
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    return div.firstElementChild;
+  }
+
   remove()
   {
     this.element.remove();
@@ -63,13 +71,6 @@ export default class ColumnChart {
  
   destroy()
   {
-    this.element.remove();
+    this.remove();
   }
-
 }
-
-function createElement(html) {
-  const div = document.createElement('div');
-  div.innerHTML = html;
-  return div.firstElementChild;
-};
