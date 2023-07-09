@@ -22,7 +22,7 @@ class Tooltip {
           { 
             document.removeEventListener('pointermove', mv);
             this.element.remove();
-            this.element.innerText = ''; 
+            this.element.textContent = ''; 
           }
         }, {once: true});
         
@@ -39,7 +39,7 @@ class Tooltip {
   }
 
   render(text = '') {
-    this.element.innerText = text;
+    this.element.textContent = text;
     document.body.appendChild(this.element);
   }
 

@@ -19,16 +19,16 @@ export default class ColumnChart {
         </div>    
       </div>
     `);
+    this.element1 = this.element;
     this.chart = this.element.querySelector('.column-chart__chart');
     this.chart_data = chart_data;
-    if (this.chart_data.label) {
-      this.element.querySelector('.column-chart__title').innerText = this.chart_data.label;
-    }
+    if (this.chart_data.label)
+      this.element.querySelector('.column-chart__title').textContent = this.chart_data.label;
     if (this.chart_data.value) {
       if (this.chart_data.formatHeading)
         this.chart_data.value = this.chart_data
           .formatHeading([this.chart_data.value.toLocaleString("en-US")])
-      this.element.querySelector('.column-chart__header').innerText = this.chart_data.value;
+      this.element.querySelector('.column-chart__header').textContent = this.chart_data.value;
     }
     if (this.chart_data.link)
       this.element
@@ -41,7 +41,7 @@ export default class ColumnChart {
   update(data = []) {
     this.chart_data.data = data;
     this.chart.innerHTML = '';
-    if (data.length)
+    if (this.chart_data.data.length)
     {
       const max_data = Math.max(...this.chart_data.data);
       for (let data_val of this.chart_data.data) {
