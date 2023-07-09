@@ -1,6 +1,5 @@
 export default class SortableTable {
   constructor(headerConfig = [], data = []) {
-    //console.log('2'.toString());
     this.element = this.create_element(`
       <div class="sortable-table"></div>
       `);
