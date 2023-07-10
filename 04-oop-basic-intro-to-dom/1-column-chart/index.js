@@ -19,7 +19,6 @@ export default class ColumnChart {
         </div>    
       </div>
     `);
-    this.element1 = this.element;
     this.chart = this.element.querySelector('.column-chart__chart');
     this.chart_data = chart_data;
     if (this.chart_data.label)
