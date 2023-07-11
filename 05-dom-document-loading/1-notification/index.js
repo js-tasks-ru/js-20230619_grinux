@@ -1,32 +1,37 @@
 export default class NotificationMessage {
-  constructor(title, opt = {}) {
-    this.build(title);
-    this.set_opt(opt);
+  constructor(title = '', {
+    duration = 50,
+    type = ''
+  } = {}) {
+
+    this.duration = duration < 50 ? 50 : duration;
+    this.title = title;
+    this.type = type;
+
+    this.build();
+    this.set_opts();
   }
 
-  build(title) {
+  build() {
     this.element = this.create_element(`
     <div class="notification" style="--value:20s">
+      ${this.title}
       <div class="timer"></div>
       <div class="inner-wrapper">
         <div class="notification-header"></div>
-        <div class="notification-body"></div>
+        <div class="notification-body">${this.title}</div>
       </div>
     </div>
   `);
-    this.element.querySelector('.notification-body').innerText = title;
-    this.element.insertAdjacentText('afterbegin', title);
   }
 
-  set_opt(opt) {
-    if (opt.duration) {
-      this.element.style.setProperty('--value', opt.duration / 1000 + 's');
-      this.duration = opt.duration;
-    }
-    if (opt.type) {
-      this.element.classList.add(opt.type);
-      this.element.querySelector('.notification-header').innerText = opt.type;
-    }
+  set_opts() {
+      this.element.style.setProperty('--value',this.duration / 1000 + 's');
+      if (this.type)
+      {
+        this.element.classList.add(this.type);
+        this.element.querySelector('.notification-header').textContent = this.type;
+      }
   }
 
   create_element(html) {
@@ -43,20 +48,12 @@ export default class NotificationMessage {
     this.element.remove();
   }
 
-  show(node) {
+  show(node = document.body) {
     document.body.dispatchEvent(new CustomEvent('new-msg', {
       bubbles: true
     }));
 
-    if (node)
-      node.appendChild(this.element);
-    else {
-      document.body.appendChild(this.element);
-    }
-
-    document.body.addEventListener('new-msg', () => {
-      this.remove();
-    });
+    node.appendChild(this.element);
 
     setTimeout(() => {
       this.remove();
