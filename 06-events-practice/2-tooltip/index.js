@@ -16,19 +16,18 @@ class Tooltip {
       if (src)
       { 
         document.addEventListener('pointermove', mv);
-        document.addEventListener('pointerout', event => {
-          const src = event.target.closest('[data-tooltip]');
-          if (src)
-          { 
-            document.removeEventListener('pointermove', mv);
-            this.element.remove();
-            this.element.textContent = ''; 
-          }
-        }, {once: true});
-        
         this.element.style.left = event.pageX + 10 + 'px';
         this.element.style.top = event.pageY + 10 + 'px';
         this.render(src.dataset.tooltip);
+      }
+    });
+    document.addEventListener('pointerout', event => {
+      const src = event.target.closest('[data-tooltip]');
+      if (src)
+      { 
+        document.removeEventListener('pointermove', mv);
+        this.element.remove();
+        this.element.textContent = ''; 
       }
     });
   }
