@@ -12,8 +12,21 @@ export default class DoubleSlider {
     this.from = selected.from ? selected.from : min;
     this.to = selected.to ? selected.to : max;
     this.build();
+    this.bind_events();
+
+    
   }
   
+  bind_events() {
+    this.element.addEventListener('pointerdown', event => {
+      if (event.target === this.left || event.target === this.right)
+        this.p_down(event);
+    });
+
+    this.p_move = this.p_move.bind(this);
+    this.p_up = this.p_up.bind(this);
+  }
+
   build() {
 
     let left = (this.from - this.min) * 100 / (this.max - this.min);
@@ -39,10 +52,6 @@ export default class DoubleSlider {
     this.left.ondragstart = () => false;
     this.right.ondragstart = () => false;
 
-    this.element.addEventListener('pointerdown', event => {
-      if (event.target === this.left || event.target === this.right)
-        this.p_down(event);
-    });
   }
 
   p_down(event) {
@@ -59,10 +68,8 @@ export default class DoubleSlider {
     }
     this.shiftX = event.clientX - (active_position.left + active_position.width / 2);
     
-    this.p_move = this.p_move.bind(this);
     document.addEventListener('pointermove', this.p_move);
 
-    this.p_up = this.p_up.bind(this);
     document.addEventListener('pointerup', this.p_up, { once: true });
   }
 
