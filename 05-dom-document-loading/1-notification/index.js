@@ -1,8 +1,11 @@
 export default class NotificationMessage {
+  static #instance = null;
+
   constructor(title = '', {
     duration = 50,
     type = ''
   } = {}) {
+
 
     this.duration = duration < 50 ? 50 : duration;
     this.title = title;
@@ -49,6 +52,12 @@ export default class NotificationMessage {
   }
 
   show(node = document.body) {
+
+    if (NotificationMessage.#instance)
+      NotificationMessage.#instance.remove();
+      
+    NotificationMessage.#instance = this;  
+
     document.body.dispatchEvent(new CustomEvent('new-msg', {
       bubbles: true
     }));
