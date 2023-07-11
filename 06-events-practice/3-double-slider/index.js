@@ -3,14 +3,17 @@ export default class DoubleSlider {
     min = 0,
     max = 100,
     formatValue,
-    selected = {}
+    selected: {
+      from = min,
+      to = max
+    } = {}
   } = {}) {
     
     this.min = min;
     this.max = max;
     this.fmt = formatValue;
-    this.from = selected.from ? selected.from : min;
-    this.to = selected.to ? selected.to : max;
+    this.from = from;
+    this.to = to;
     this.build();
     this.bind_events();
 
@@ -28,7 +31,6 @@ export default class DoubleSlider {
   }
 
   build() {
-
     let left = (this.from - this.min) * 100 / (this.max - this.min);
     let right = (this.max - this.to) * 100 / (this.max - this.min);
     this.element = this.create_element(`
@@ -51,7 +53,6 @@ export default class DoubleSlider {
 
     this.left.ondragstart = () => false;
     this.right.ondragstart = () => false;
-
   }
 
   p_down(event) {
