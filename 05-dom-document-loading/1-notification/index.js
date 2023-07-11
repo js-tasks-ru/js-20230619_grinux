@@ -7,7 +7,7 @@ export default class NotificationMessage {
   } = {}) {
 
 
-    this.duration = duration < 50 ? 50 : duration;
+    this.duration = Math.max(50, duration);
     this.title = title;
     this.type = type;
 
@@ -55,7 +55,6 @@ export default class NotificationMessage {
 
     if (NotificationMessage.#instance)
       NotificationMessage.#instance.remove();
-      
     NotificationMessage.#instance = this;  
 
     document.body.dispatchEvent(new CustomEvent('new-msg', {
