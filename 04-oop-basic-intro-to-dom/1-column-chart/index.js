@@ -17,7 +17,7 @@ export default class ColumnChart {
     this.fmt = formatHeading;
     this.value = value;
 
-    this.build(this.chart_data);
+    this.build();
     this.update(this.data);
   }
 
@@ -53,7 +53,7 @@ export default class ColumnChart {
       this.element.classList.add('column-chart_loading');
       return;
     }
-    
+
     const max_data = Math.max(...this.data);
     for (let data_val of this.data) {
       const value = Math.floor(data_val * this.chartHeight / max_data);
