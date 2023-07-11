@@ -23,12 +23,12 @@ export default class ColumnChart {
 
   build()
   {
-    this.element = this.templeate();
+    this.element = this.create_element(this.get_template());
     this.chart = this.element.querySelector('.column-chart__chart');
   }
 
-  templeate() {
-    return this.create_element (`
+  get_template() {
+    return `
       <div class="column-chart column-chart_loading" style="--chart-height: ${this.chartHeight}">
         <div class="column-chart__title">
           ${this.label}
@@ -43,7 +43,7 @@ export default class ColumnChart {
           <div data-element="body" class="column-chart__chart"></div>
         </div>    
       </div>
-  `);
+  `
   }
 
   update(data = []) {
