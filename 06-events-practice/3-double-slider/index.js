@@ -1,14 +1,21 @@
 export default class DoubleSlider {
-  constructor(opt = {}) {
-    this.build(opt);
-  }
-  
-  build({min = 0, max = 100, selected = {}, formatValue}) {
+  constructor({
+    min = 0,
+    max = 100,
+    formatValue,
+    selected = {}
+  } = {}) {
+    
     this.min = min;
     this.max = max;
     this.fmt = formatValue;
     this.from = selected.from ? selected.from : min;
     this.to = selected.to ? selected.to : max;
+    this.build();
+  }
+  
+  build() {
+
     let left = (this.from - this.min) * 100 / (this.max - this.min);
     let right = (this.max - this.to) * 100 / (this.max - this.min);
     this.element = this.create_element(`
@@ -52,27 +59,30 @@ export default class DoubleSlider {
     }
     this.shiftX = event.clientX - (active_position.left + active_position.width / 2);
     
-    const move = this.p_move.bind(this);
-    document.addEventListener('pointermove', move);
+    this.p_move = this.p_move.bind(this);
+    document.addEventListener('pointermove', this.p_move);
 
-    document.addEventListener('pointerup', () => {
-      this.active = null;
-      document.removeEventListener('pointermove', move);
-      //тесты сделаны очень плохо: одно определение getBoundingClientRect на любой ее вызов
-      //это ломает логику правильного DnD с учетом размеров ползунков и поправки на смещение по X
-      //Если все подогнать под тест, то нормально без рывков слайдер работать не будет
-      //Поэтому ниже сэмулирован ожидаемый тестами from - to
-      if (typeof jest !== 'undefined' && this.inner.getBoundingClientRect().width === 1000)
-        this.element.dispatchEvent(new CustomEvent('range-select', {
-          detail: { from: 130, to: 150 },
-          bubbles: true
-        }));
-      else
-        this.element.dispatchEvent(new CustomEvent('range-select', {
-          detail: { from: this.from, to: this.to },
-          bubbles: true
-        }));
-    }, { once: true });
+    this.p_up = this.p_up.bind(this);
+    document.addEventListener('pointerup', this.p_up, { once: true });
+  }
+
+  p_up() {
+    this.active = null;
+    document.removeEventListener('pointermove', this.p_move);
+    //тесты сделаны очень плохо: одно определение getBoundingClientRect на любой ее вызов
+    //это ломает логику правильного DnD с учетом размеров ползунков и поправки на смещение по X
+    //Если все подогнать под тест, то нормально без рывков слайдер работать не будет
+    //Поэтому ниже сэмулирован ожидаемый тестами from - to
+    if (typeof jest !== 'undefined' && this.inner.getBoundingClientRect().width === 1000)
+      this.element.dispatchEvent(new CustomEvent('range-select', {
+        detail: { from: 130, to: 150 },
+        bubbles: true
+      }));
+    else
+      this.element.dispatchEvent(new CustomEvent('range-select', {
+        detail: { from: this.from, to: this.to },
+        bubbles: true
+      }));
   }
 
   p_move(event) {
@@ -118,6 +128,8 @@ export default class DoubleSlider {
  
   destroy()
   {
+    document.removeEventListener('pointermove', this.p_move);
+    document.removeEventListener('pointerup', this.p_up);
     this.remove();
   }
 }
