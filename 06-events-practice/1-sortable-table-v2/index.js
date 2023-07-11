@@ -13,15 +13,16 @@ export default class SortableTable {
 
   build_header() {
     this.element = this.create_element(`
-      <div class="sortable-table"></div>
-      `);
+      <div class="sortable-table">
+        <div data-element="header" class="sortable-table__header sortable-table__row"></div>
+        <div data-element="body" class="sortable-table__body"></div>
+      </div>`
+    );
+
     this.subElements = {};
-    this.subElements.header = this.element.appendChild(this.create_element(`
-      <div data-element="header" class="sortable-table__header sortable-table__row"></div>
-      `));
-    this.subElements.body = this.element.appendChild(this.create_element(`
-      <div data-element="body" class="sortable-table__body"></div>
-      `));
+    this.subElements.header = this.element.querySelector('[data-element="header"]');
+    this.subElements.body = this.element.querySelector('[data-element="body"]');
+    
     for (let th of this.config) {
       this.subElements.header.appendChild(this.create_element(`
         <div class="sortable-table__cell" data-id="${th.id}" data-sortable="${th.sortable}">
@@ -48,7 +49,7 @@ export default class SortableTable {
 
   sort_on_server (field, order = 'asc')
   {
-
+    throw new Error('sort_on_server() not implemented yet');
   }
 
   sort_on_client(field, order = 'asc') {
@@ -62,8 +63,13 @@ export default class SortableTable {
           a[field].toString().localeCompare(b[field].toString(), ['ru-RU'], { caseFirst: 'upper' });
 
     });
-    if (this.subElements.sort_id)
-    {
+
+    this.render_header(field, order);
+    this.render_table();
+  }
+
+  render_header(field, order) {
+    if (this.subElements.sort_id) {
       this.subElements.sort_id.removeAttribute("data-order");
       this.subElements.sort_id.querySelector('.sortable-table__sort-arrow').remove();
     }
@@ -76,7 +82,6 @@ export default class SortableTable {
     `));
     this.subElements.body.innerHTML = ''; //-- возможно нужно не удаление, а inplace сортировка, 
                                           //-- чтобы картинки не перезагружались каждый раз?
-    this.render_table();
   }
 
   render_table() {
