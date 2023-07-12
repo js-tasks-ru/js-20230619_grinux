@@ -110,6 +110,8 @@ export default class SortableTable {
           a[this.id].toString().localeCompare(b[this.id].toString(), ['ru-RU'], { caseFirst: 'upper' });
 
     });
+    this.new_data = this.data;
+    this.data = [];
 
     this.render_header();
     this.render_table();
