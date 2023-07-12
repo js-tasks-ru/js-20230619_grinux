@@ -62,7 +62,7 @@ export default class ColumnChart {
 
     try {
       response = await fetch(BACKEND_URL + '/' + this.url + '?from=' + from + '&to=' + to);
-      this.data = await response.json()
+      this.data = await response.json();
 
       let data = Object.entries(this.data).map(entry => entry[1]);
 
@@ -70,7 +70,8 @@ export default class ColumnChart {
 
       if (!data.length) {
         this.element.classList.add('column-chart_loading');
-        return this.data; //обязательно ли в этом случае возвращать промис?
+        return; //обязательно ли в этом случае возвращать промис?
+                //Почитал учебник и разобрался.
       }
 
       const max_data = Math.max(...data);
