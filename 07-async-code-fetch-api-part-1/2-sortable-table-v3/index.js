@@ -62,8 +62,8 @@ export default class SortableTable {
 
   async render() {
 
-    this.render_header();
     await this.get_data();
+    this.render_header();
     this.render_table();
 
   }
