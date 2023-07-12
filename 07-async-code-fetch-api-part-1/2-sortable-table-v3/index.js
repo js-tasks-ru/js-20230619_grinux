@@ -50,12 +50,14 @@ export default class SortableTable {
 
     this.subElements.header.addEventListener('pointerdown', e => {
       const th = e.target.closest('div');
-      if (th.getAttribute("data-sortable") === 'true') {
-        const order = th.getAttribute('data-order');
-        if (this.is_sort_locally)
-          this.sortOnClient(th.getAttribute('data-id'), order === 'desc' ? 'asc' : 'desc');
-        else
-          this.sortOnServer(th.getAttribute('data-id'), order === 'desc' ? 'asc' : 'desc');
+      if (th) {
+        if (th.getAttribute("data-sortable") === 'true') {
+          const order = th.getAttribute('data-order');
+          if (this.is_sort_locally)
+            this.sortOnClient(th.getAttribute('data-id'), order === 'desc' ? 'asc' : 'desc');
+          else
+            this.sortOnServer(th.getAttribute('data-id'), order === 'desc' ? 'asc' : 'desc');
+        }
       }
     });
   }
