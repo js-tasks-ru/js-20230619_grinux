@@ -1,50 +1,63 @@
-export default class SortableTable {
+import LJSBase from '../../components/LJSBase.js';
+
+export default class SortableTable extends LJSBase {
   constructor(headerConfig = [], data = []) {
-    this.config = headerConfig;
-    this.data = data;
-    this.build_header();
-    this.render_table();
+    super();
+    this.headerConfig = headerConfig;
+    this.tableData = data;
+
+    this.render();
   }
 
-  build_header() {
-    this.element = this.create_element(`
-      <div class="sortable-table"></div>
-      `);
-    this.subElements = {};
-    this.subElements.header = this.element.appendChild(this.create_element(`
-      <div data-element="header" class="sortable-table__header sortable-table__row"></div>
-      `));
-    this.subElements.body = this.element.appendChild(this.create_element(`
-      <div data-element="body" class="sortable-table__body"></div>
-      `));
+  render() {
+    this.element = this.createElement(this.createTable());
+    this.subElements = {
+      header: this.element.querySelector('[data-element="header"]'),
+      body: this.element.querySelector('[data-element="body"]')
+    };
+  }
 
-    for (let th of this.config) {
-      this.subElements.header.appendChild(this.create_element(`
-        <div class="sortable-table__cell" data-id="${th.id}" data-sortable="${th.sortable}">
+  createTable() {
+    return (`
+    <div class="sortable-table">
+      <div data-element="header" class="sortable-table__header sortable-table__row">
+        ${this.createHeaderRows()}
+      </div>
+      <div data-element="body" class="sortable-table__body">
+        ${this.createBody()}
+      </div>
+    </div>
+    `);
+  }
+
+  createHeaderRows() {
+    return this.headerConfig
+      .map(th =>
+        `<div class="sortable-table__cell" data-id="${th.id}" data-sortable="${th.sortable}">
           <span>${th.title}</span>
-        </div>
-      `));
-    }
+        </div>`
+      )
+      .join('');
   }
 
-  render_table() {
-    for (let item of this.data) {
-      const entry = this.subElements.body.appendChild(this.create_element(`
-        <a href="/products/${item['id']}" class="sortable-table__row">  
-      `));
-      for (let th of this.config) {
-        if (th.template)
-          entry.appendChild(this.create_element(th.template(item[th.id])));
-        else
-          entry.appendChild(this.create_element(`
-              <div class="sortable-table__cell">${item[th.id]}</div>
-            `));
-      }
-    }
+  createBody() {
+    return this.tableData.map(item => this.createBodyRows(item)).join('');
+  }
+
+  createBodyRows(item) {
+    return (`
+      <a href="/products/${item['id']}" class="sortable-table__row">
+        ${this.headerConfig
+          .map(th => th.template ? th.template(item[th.id]) : 
+              `<div class="sortable-table__cell">${item[th.id]}</div>`)
+          .join('')
+        }
+      </a>
+    `);
   }
 
   sort(field, order = 'asc') {
-    this.data.sort((a, b) => {
+    this.tableData.sort((a, b) => {
       if (!isNaN(a[field]) && !isNaN(b[field]))
         return order === 'desc' ? b[field] - a[field] : a[field] - b[field];
       else
@@ -54,20 +67,8 @@ export default class SortableTable {
 
     });
     this.subElements.header.querySelector(`[data-id="${field}"]`).setAttribute("data-order", order);
-    this.subElements.body.innerHTML = '';//-- возможно нужно не удаление, а inplace сортировка, 
-                                          //-- чтобы картинки не перезагружались каждый раз?
-    this.render_table();
-  }
-  //#create_element - тесты говорят, что приватные методы не поддерживаются самими тестами
-  create_element(html)
-  {
-    const div = document.createElement('div');
-    div.innerHTML = html;
-    return div.firstElementChild;
-  }
-
-  remove() {
-    this.element.remove();
+    this.subElements.body.innerHTML = '';
+    this.subElements.body.innerHTML = this.createBody();
   }
 
   destroy() {
