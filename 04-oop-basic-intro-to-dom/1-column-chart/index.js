@@ -1,5 +1,5 @@
 export default class ColumnChart {
-  
+
   chartHeight = 50;
 
   constructor({
@@ -8,26 +8,23 @@ export default class ColumnChart {
     link,
     value,
     formatHeading
-  } = {})
-
-  {
-    this.data = data;
+  } = {}) {
+    this.chartData = data;
     this.label = label;
     this.link = link;
     this.fmt = formatHeading;
     this.value = value;
 
     this.build();
-    this.update(this.data);
   }
 
-  build()
-  {
-    this.element = this.create_element(this.get_template());
-    this.chart = this.element.querySelector('.column-chart__chart');
+  build() {
+    this.element = this.createElement(this.getTemplate());
+    this.chartElement = this.element.querySelector('.column-chart__chart');
+    this.fill();
   }
 
-  get_template() {
+  getTemplate() {
     return `
       <div class="column-chart column-chart_loading" style="--chart-height: ${this.chartHeight}">
         <div class="column-chart__title">
@@ -36,8 +33,8 @@ export default class ColumnChart {
         </div>
         <div class="column-chart__container">
           <div data-element="header" class="column-chart__header">
-            ${this.value ? 
-              this.fmt ? this.fmt([this.value.toLocaleString("en-US")]) : this.value : 
+            ${this.value ?
+              this.fmt ? this.fmt([this.value.toLocaleString("en-US")]) : this.value :
               ''}
           </div>
           <div data-element="body" class="column-chart__chart"></div>
@@ -46,38 +43,46 @@ export default class ColumnChart {
   `
   }
 
-  update(data = []) {
-    this.data = data;
-    this.chart.innerHTML = '';
-    if (!this.data.length) {
-      this.element.classList.add('column-chart_loading');
+  setLoadingStatus(isLoading) {
+    isLoading ? this.element.classList.add('column-chart_loading') : 
+                     this.element.classList.remove('column-chart_loading')
+  }
+
+  fill() {
+    if (!this.chartData.length) {
+      this.setLoadingStatus(true);
       return;
     }
 
-    const max_data = Math.max(...this.data);
-    for (let data_val of this.data) {
-      const value = Math.floor(data_val * this.chartHeight / max_data);
-      const percnt = Math.round(data_val  * 100 / max_data);
-      this.chart.appendChild(this.create_element(`
-        <div style="--value: ${value}" data-tooltip="${percnt}%"></div>
+    const maxChartData = Math.max(...this.chartData);
+    for (let chartDataValue of this.chartData) {
+      const value = Math.floor(chartDataValue * this.chartHeight / maxChartData);
+      const percent = Math.round(chartDataValue * 100 / maxChartData);
+      this.chartElement.appendChild(this.createElement(`
+        <div style="--value: ${value}" data-tooltip="${percent}%"></div>
         `));
     }
-    this.element.classList.remove('column-chart_loading');
+    this.setLoadingStatus(false);
   }
 
-  create_element(html) {
+  update(data = []) {
+    this.chartData = data;
+    this.chartElement.innerHTML = '';
+    
+    this.fill();
+  }
+
+  createElement(html) {
     const div = document.createElement('div');
     div.innerHTML = html;
     return div.firstElementChild;
   }
 
-  remove()
-  {
+  remove() {
     this.element.remove();
   }
- 
-  destroy()
-  {
+
+  destroy() {
     this.remove();
   }
 }
