@@ -1,6 +1,8 @@
-export default class NotificationMessage {
+import LJSBase from '../../components/LJSBase.js';
+
+export default class NotificationMessage extends LJSBase {
   static #instance = null;
-  
+
   defaultDuration = 50;
 
   constructor(title = '', {
@@ -8,25 +10,25 @@ export default class NotificationMessage {
     type = ''
   } = {}) {
 
+    super();
     this.duration = Math.max(50, duration);
     this.title = title;
     this.type = type;
 
-    this.build();
+    this.render();
   }
 
-  build() {
+  render() {
     this.element = this.createElement(this.getTemplate());
-    this.element.style.setProperty('--value',this.duration / 1000 + 's');
-    if (this.type)
-    {
+    this.element.style.setProperty('--value', this.duration / 1000 + 's');
+    if (this.type) {
       this.element.classList.add(this.type);
       this.element.querySelector('.notification-header').textContent = this.type;
     }
   }
 
   getTemplate() {
-    return `
+    return (`
       <div class="notification" style="--value:20s">
         ${this.title}
         <div class="timer"></div>
@@ -35,28 +37,14 @@ export default class NotificationMessage {
           <div class="notification-body">${this.title}</div>
         </div>
       </div>
-  `;
-  }
-
-  createElement(html) {
-    const div = document.createElement('div');
-    div.innerHTML = html;
-    return div.firstElementChild;
-  }
-
-  destroy() {
-    this.remove();
-  }
-
-  remove() {
-    this.element.remove();
+  `);
   }
 
   show(node = document.body) {
 
     if (NotificationMessage.#instance)
       NotificationMessage.#instance.remove();
-    NotificationMessage.#instance = this;  
+    NotificationMessage.#instance = this;
 
     document.body.dispatchEvent(new CustomEvent('new-msg', {
       bubbles: true
@@ -67,5 +55,9 @@ export default class NotificationMessage {
     setTimeout(() => {
       this.remove();
     }, this.duration);
-  }                        
+  }
+
+  destroy() {
+    this.remove();
+  }
 }
