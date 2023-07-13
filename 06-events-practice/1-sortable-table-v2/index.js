@@ -1,60 +1,96 @@
-export default class SortableTable {
+import LJSBase from '../../components/LJSBase.js';
+
+export default class SortableTable extends LJSBase{
   constructor(headerConfig, {
     data = [],
-    sorted = {},
+    sorted: {
+      id = headerConfig.find(item => item.sortable).id,
+      order = 'asc'
+    } = {},
     locally = true
   } = {}) {
-    this.config = headerConfig;
-    this.is_sort_locally = locally;
-    this.data = data;
-    this.build_header();
-    this.sort(sorted.id, sorted.order);
-  }
 
-  build_header() {
-    this.element = this.create_element(`
-      <div class="sortable-table">
-        <div data-element="header" class="sortable-table__header sortable-table__row"></div>
-        <div data-element="body" class="sortable-table__body"></div>
-      </div>`
-    );
-
-    this.subElements = {};
-    this.subElements.header = this.element.querySelector('[data-element="header"]');
-    this.subElements.body = this.element.querySelector('[data-element="body"]');
+    super();
+    this.headerConfig = headerConfig;
+    this.tableData = data;
+    this.isSortLocally = locally;
+    this.id = id;
+    this.order = order;
     
-    for (let th of this.config) {
-      this.subElements.header.appendChild(this.create_element(`
-        <div class="sortable-table__cell" data-id="${th.id}" data-sortable="${th.sortable}">
+    this.render();
+    this.sort(this.id, this.order); //tests require table to be sorted by default
+    this.createEventListeners();
+  }
+
+  render() {
+    this.element = this.createElement(this.createTable());
+    this.subElements = {
+      header: this.element.querySelector('[data-element="header"]'),
+      body: this.element.querySelector('[data-element="body"]')
+    };
+  }
+
+  createTable() {
+    return (`
+    <div class="sortable-table">
+      <div data-element="header" class="sortable-table__header sortable-table__row">
+        ${this.createHeaderRows()}
+      </div>
+      <div data-element="body" class="sortable-table__body">
+        ${this.createBody()}
+      </div>
+    </div>
+    `);
+  }
+
+  createHeaderRows() {
+    return this.headerConfig
+      .map(th =>
+        `<div class="sortable-table__cell" data-id="${th.id}" data-sortable="${th.sortable}">
           <span>${th.title}</span>
-        </div>
-      `));
-    }
-    this.subElements.header.addEventListener('pointerdown', event => {
-      const th = event.target.closest('div'); 
-      if(th.getAttribute("data-sortable") === 'true')
-      { 
-        const order = th.getAttribute('data-order');
-        this.sort(th.getAttribute('data-id'), order === 'desc' ? 'asc' : 'desc');
-      }
-    });
+        </div>`
+      )
+      .join('');
   }
 
-  sort (field, order) {
-    if (this.is_sort_locally)
-      this.sort_on_client(field, order);
+  createBody() {
+    return this.tableData.map(item => this.createBodyRows(item)).join('');
+  }
+
+  createBodyRows(item) {
+    return (`
+      <a href="/products/${item['id']}" class="sortable-table__row">
+        ${this.headerConfig
+          .map(th => th.template ? th.template(item[th.id]) : 
+              `<div class="sortable-table__cell">${item[th.id]}</div>`)
+          .join('')
+        }
+      </a>
+    `);
+  }
+
+  sort(field, order) {
+    this.id = field;
+    this.order = order;
+
+    if (this.isSortLocally)
+      this.sortOnClient(field, order);
     else
-      this.sort_on_server(field, order);   
+      this.sortOnServer(field, order);
+
+    this.setSortColumnStyle();
+
+    this.subElements.body.innerHTML = this.createBody();
   }
 
-  sort_on_server (field, order = 'asc')
+  sortOnServer (field, order = 'asc')
   {
     throw new Error('sort_on_server() not implemented yet');
   }
 
-  sort_on_client(field, order = 'asc') {
-    const sort_type = this.config.find(item => item.id === field).sortType;
-    this.data.sort((a, b) => {
+  sortOnClient (field, order = 'asc') {
+    const sort_type = this.headerConfig.find(item => item.id === field).sortType;
+    this.tableData.sort((a, b) => {
       if (sort_type == 'number')
         return order === 'desc' ? b[field] - a[field] : a[field] - b[field];
       else
@@ -63,54 +99,30 @@ export default class SortableTable {
           a[field].toString().localeCompare(b[field].toString(), ['ru-RU'], { caseFirst: 'upper' });
 
     });
-
-    this.render_header(field, order);
-    this.render_table();
   }
 
-  render_header(field, order) {
+  setSortColumnStyle() {
     if (this.subElements.sort_id) {
       this.subElements.sort_id.removeAttribute("data-order");
       this.subElements.sort_id.querySelector('.sortable-table__sort-arrow').remove();
     }
-    this.subElements.sort_id = this.subElements.header.querySelector(`[data-id="${field}"]`);
-    this.subElements.sort_id.setAttribute("data-order", order);
-    this.subElements.sort_id.appendChild(this.create_element(`
+    this.subElements.sort_id = this.subElements.header.querySelector(`[data-id="${this.id}"]`);
+    this.subElements.sort_id.setAttribute("data-order", this.order);
+    this.subElements.sort_id.appendChild(this.createElement(`
       <span data-element="arrow" class="sortable-table__sort-arrow">
         <span class="sort-arrow"></span>
       </span>
     `));
-    this.subElements.body.innerHTML = ''; //-- возможно нужно не удаление, а inplace сортировка, 
-                                          //-- чтобы картинки не перезагружались каждый раз?
   }
 
-  render_table() {
-    for (let item of this.data) {
-      const entry = this.subElements.body.appendChild(this.create_element(`
-        <a href="/products/${item['id']}" class="sortable-table__row">  
-      `));
-      for (let th of this.config)
-      {
-        if(th.template)
-            entry.appendChild(this.create_element(th.template(item[th.id])));
-        else
-            entry.appendChild(this.create_element(`
-              <div class="sortable-table__cell">${item[th.id]}</div>
-            `));
+  createEventListeners() {
+    this.subElements.header.addEventListener('pointerdown', event => {
+      const th = event.target.closest('div');
+      if (th.getAttribute("data-sortable") === 'true') {
+        const order = th.getAttribute('data-order');
+        this.sort(th.getAttribute('data-id'), order === 'desc' ? 'asc' : 'desc');
       }
-    }
-  }
-
-  //#create_element - тесты говорят, что приватные методы не поддерживаются самими тестами
-  create_element(html)
-  {
-    const div = document.createElement('div');
-    div.innerHTML = html;
-    return div.firstElementChild;
-  }
-
-  remove() {
-    this.element.remove();
+    });
   }
 
   destroy() {
