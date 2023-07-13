@@ -11,7 +11,7 @@ export default class NotificationMessage extends LJSBase {
   } = {}) {
 
     super();
-    this.duration = Math.max(50, duration);
+    this.duration = Math.max(this.defaultDuration, duration);
     this.title = title;
     this.type = type;
 
