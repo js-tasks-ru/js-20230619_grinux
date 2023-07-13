@@ -14,7 +14,7 @@ export default class Tooltip extends LJSBase {
   initialize () {
     this.create();
 
-    this.createListeners();
+    this.createEventListeners();
   }
 
   create() {
@@ -22,7 +22,7 @@ export default class Tooltip extends LJSBase {
     this.element.style.position = 'absolute';
   }
 
-  createListeners() {
+  createEventListeners() {
     this.onDocumentPointerMove = this.onDocumentPointerMove.bind(this);
     this.onDocumentPointerOver = this.onDocumentPointerOver.bind(this);
     this.onDocumentPointerOut = this.onDocumentPointerOut.bind(this);
@@ -61,11 +61,11 @@ export default class Tooltip extends LJSBase {
   }
 
   destroy() {
-    this.destroyListeners();
+    this.destroyEventListeners();
     this.remove();
   }
 
-  destroyListeners() {
+  destroyEventListeners() {
     document.removeEventListener('pointerover', this.onDocumentPointerOver);
     document.removeEventListener('pointerout', this.onDocumentPointerOut);
     document.removeEventListener('pointermove', this.onDocumentPointerMove);
