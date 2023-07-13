@@ -57,18 +57,36 @@ export default class SortableTable extends LJSBase {
   }
 
   sort(field, order = 'asc') {
+    this.id = field;
+    this.order = order;
+
     this.tableData.sort((a, b) => {
-      if (!isNaN(a[field]) && !isNaN(b[field]))
-        return order === 'desc' ? b[field] - a[field] : a[field] - b[field];
+      if (!isNaN(a[this.id]) && !isNaN(b[this.id]))
+        return this.order === 'desc' ? b[this.id] - a[this.id] : a[this.id] - b[this.id];
       else
-        return order === 'desc' ?
-          b[field].toString().localeCompare(a[field].toString(), ['ru-RU'], { caseFirst: 'upper' }) :
-          a[field].toString().localeCompare(b[field].toString(), ['ru-RU'], { caseFirst: 'upper' });
+        return this.order === 'desc' ?
+          b[this.id].toString().localeCompare(a[this.id].toString(), ['ru-RU'], { caseFirst: 'upper' }) :
+          a[this.id].toString().localeCompare(b[this.id].toString(), ['ru-RU'], { caseFirst: 'upper' });
 
     });
-    this.subElements.header.querySelector(`[data-id="${field}"]`).setAttribute("data-order", order);
-    this.subElements.body.innerHTML = '';
+
+    this.setSortColumnStyle();
+
     this.subElements.body.innerHTML = this.createBody();
+  }
+
+  setSortColumnStyle() {
+    if (this.subElements.sort_id) {
+      this.subElements.sort_id.removeAttribute("data-order");
+      this.subElements.sort_id.querySelector('.sortable-table__sort-arrow').remove();
+    }
+    this.subElements.sort_id = this.subElements.header.querySelector(`[data-id="${this.id}"]`);
+    this.subElements.sort_id.setAttribute("data-order", this.order);
+    this.subElements.sort_id.appendChild(this.createElement(`
+      <span data-element="arrow" class="sortable-table__sort-arrow">
+        <span class="sort-arrow"></span>
+      </span>
+    `));
   }
 
   destroy() {
