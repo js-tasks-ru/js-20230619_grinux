@@ -33,6 +33,9 @@ export default class SortableTable extends LJSBase{
       header: this.element.querySelector('[data-element="header"]'),
       body: this.element.querySelector('[data-element="body"]')
     };
+    this.createEventListeners();  //-- если вынести в конструктор, то тесты успевают 
+                                  //-- сделать клик после вызова render() до того, 
+                                  //-- как установятся обработчик событий клика
     this.isBodyRowsRendered = false;
     if (this.isSortLocally)
     {
@@ -41,9 +44,6 @@ export default class SortableTable extends LJSBase{
         this.appendTableRows(await this.loadTableData(this.clientRowsPerScreen * 2 - INITIAL_LOADING_NUM));
     }
     await this.sort(this.id, this.order);
-    this.createEventListeners(); //-- если вынести в конструктор, то тесты успевают 
-                                 //-- сделать клик после вызова render() до того, 
-                                 //-- как установятся обработчик событий клика
   }
 
   createTable() {
