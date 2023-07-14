@@ -1,8 +1,9 @@
 import fetchJson from './utils/fetch-json.js';
+import LJSBase from '../../components/LJSBase.js';
 
 const BACKEND_URL = 'https://course-js.javascript.ru';
 
-export default class ColumnChart {
+export default class ColumnChart extends LJSBase {
   
   chartHeight = 50;
 
@@ -10,8 +11,8 @@ export default class ColumnChart {
     url = '',
     label = '',
     range: {
-      from = 1, 
-      to = 2
+      from = new Date(), 
+      to = new Date()
     } = {},
     link,
     value,
@@ -19,14 +20,14 @@ export default class ColumnChart {
   } = {})
 
   {
+    super();
     this.url = url;
     this.label = label;
     this.link = link;
-    this.fmt = formatHeading;
+    this.formatHeading = formatHeading;
     this.value = value;
     this.from = from;
     this.to = to;
-    this.subElements = {};
 
     this.build();
     this.update(this.from, this.to);
@@ -34,12 +35,15 @@ export default class ColumnChart {
 
   build()
   {
-    this.element = this.create_element(this.get_template());
-    this.subElements.body = this.element.querySelector('.column-chart__chart');
+    this.element = this.createElement(this.createTemplate());
+    this.subElements = {
+      body: this.element.querySelector('.column-chart__chart'),
+      header: this.element.querySelector('.column-chart__header')
+    }
   }
 
-  get_template() {
-    return `
+  createTemplate() {
+      return `
       <div class="column-chart column-chart_loading" style="--chart-height: ${this.chartHeight}">
         <div class="column-chart__title">
           ${this.label}
@@ -48,7 +52,7 @@ export default class ColumnChart {
         <div class="column-chart__container">
           <div data-element="header" class="column-chart__header">
             ${this.value ? 
-              this.fmt ? this.fmt([this.value.toLocaleString("en-US")]) : this.value : 
+              this.formatHeading ? this.formatHeading([this.value.toLocaleString("en-US")]) : this.value : 
               ''}
           </div>
           <div data-element="body" class="column-chart__chart"></div>
@@ -58,51 +62,50 @@ export default class ColumnChart {
   }
 
   async update(from, to) {
-    let response;
+    
+    this.showSkeleton(true);
 
     try {
-      response = await fetch(BACKEND_URL + '/' + this.url + '?from=' + from + '&to=' + to);
-      this.data = await response.json();
+      let response = await fetch(BACKEND_URL + '/' + this.url + '?from=' + from + '&to=' + to);
 
-      let data = Object.entries(this.data).map(entry => entry[1]);
+      let loadedData = await response.json();
 
-      this.subElements.body.innerHTML = '';
+      this.chartData = Object.entries(loadedData).map(entry => entry[1]);
 
-      if (!data.length) {
-        this.element.classList.add('column-chart_loading');
-        return; //обязательно ли в этом случае возвращать промис?
-                //Почитал учебник и разобрался.
-      }
+      if (!this.chartData.length)
+        return;
 
-      const max_data = Math.max(...data);
+      this.subElements.body.innerHTML = this.fill();
 
-      for (let data_val of data) {
-        const value = Math.floor(data_val * this.chartHeight / max_data);
-        const percnt = Math.round(data_val * 100 / max_data);
-        this.subElements.body.appendChild(this.create_element(`
-        <div style="--value: ${value}" data-tooltip="${percnt}%"></div>
-        `));
-      }
+      this.showSkeleton(false);
 
-      this.element.classList.remove('column-chart_loading');
-
-      return this.data;
-
+      return loadedData;
     }
     catch (err) {
       throw new Error(`Network error has occurred: ${err}`);
     }
   }
 
-  create_element(html) {
-    const div = document.createElement('div');
-    div.innerHTML = html;
-    return div.firstElementChild;
+  showSkeleton(isShow) {
+    isShow ? this.element.classList.add('column-chart_loading') : 
+             this.element.classList.remove('column-chart_loading');
   }
 
-  remove()
-  {
-    this.element.remove();
+  fill() {
+    const maxChartData = Math.max(...this.chartData);
+    this.value = 0;
+    let chartDataHTML =  this.chartData
+      .map(chartDataValue => {
+        this.value += chartDataValue;
+        const value = Math.floor(chartDataValue * this.chartHeight / maxChartData);
+        const percent = Math.round(chartDataValue * 100 / maxChartData);
+        return (`<div style="--value: ${value}" data-tooltip="${percent}%"></div>`);
+      })
+      .join('');
+      this.subElements.header.textContent = this.formatHeading ? 
+                this.formatHeading([this.value.toLocaleString("en-US")]) : 
+                this.value;
+    return chartDataHTML;            
   }
  
   destroy()
