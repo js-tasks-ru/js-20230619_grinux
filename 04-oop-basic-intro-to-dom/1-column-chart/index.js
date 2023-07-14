@@ -1,4 +1,6 @@
-export default class ColumnChart {
+import LJSBase from '../../components/LJSBase.js';
+
+export default class ColumnChart extends LJSBase{
 
   chartHeight = 50;
 
@@ -9,22 +11,23 @@ export default class ColumnChart {
     value,
     formatHeading
   } = {}) {
+    super();
     this.chartData = data;
     this.label = label;
     this.link = link;
-    this.fmt = formatHeading;
+    this.formatHeading = formatHeading;
     this.value = value;
 
     this.build();
+    this.update(this.chartData);
   }
 
   build() {
-    this.element = this.createElement(this.getTemplate());
+    this.element = this.createElement(this.createTemplate());
     this.chartElement = this.element.querySelector('.column-chart__chart');
-    this.fill();
   }
 
-  getTemplate() {
+  createTemplate() {
     return `
       <div class="column-chart column-chart_loading" style="--chart-height: ${this.chartHeight}">
         <div class="column-chart__title">
@@ -34,7 +37,7 @@ export default class ColumnChart {
         <div class="column-chart__container">
           <div data-element="header" class="column-chart__header">
             ${this.value ?
-              this.fmt ? this.fmt([this.value.toLocaleString("en-US")]) : this.value :
+              this.formatHeading ? this.formatHeading([this.value.toLocaleString("en-US")]) : this.value :
               ''}
           </div>
           <div data-element="body" class="column-chart__chart"></div>
@@ -43,43 +46,34 @@ export default class ColumnChart {
   `
   }
 
-  setLoadingStatus(isLoading) {
-    isLoading ? this.element.classList.add('column-chart_loading') : 
-                     this.element.classList.remove('column-chart_loading')
+  showSkeleton(isShow) {
+    isShow ? this.element.classList.add('column-chart_loading') : 
+             this.element.classList.remove('column-chart_loading');
   }
 
   fill() {
-    if (!this.chartData.length) {
-      this.setLoadingStatus(true);
-      return;
-    }
-
     const maxChartData = Math.max(...this.chartData);
-    for (let chartDataValue of this.chartData) {
-      const value = Math.floor(chartDataValue * this.chartHeight / maxChartData);
-      const percent = Math.round(chartDataValue * 100 / maxChartData);
-      this.chartElement.appendChild(this.createElement(`
-        <div style="--value: ${value}" data-tooltip="${percent}%"></div>
-        `));
-    }
-    this.setLoadingStatus(false);
+
+    return this.chartData
+      .map(chartDataValue => {
+        const value = Math.floor(chartDataValue * this.chartHeight / maxChartData);
+        const percent = Math.round(chartDataValue * 100 / maxChartData);
+        return (`<div style="--value: ${value}" data-tooltip="${percent}%"></div>`);
+      })
+      .join('');
   }
 
   update(data = []) {
     this.chartData = data;
-    this.chartElement.innerHTML = '';
     
-    this.fill();
-  }
+    this.showSkeleton(true);
 
-  createElement(html) {
-    const div = document.createElement('div');
-    div.innerHTML = html;
-    return div.firstElementChild;
-  }
+    if (!this.chartData.length)
+      return;
 
-  remove() {
-    this.element.remove();
+    this.chartElement.innerHTML = this.fill();
+
+    this.showSkeleton(false);
   }
 
   destroy() {
