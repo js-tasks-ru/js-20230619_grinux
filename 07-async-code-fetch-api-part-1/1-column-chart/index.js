@@ -63,10 +63,10 @@ export default class ColumnChart extends LJSBase {
 
   async update(from, to) {
     
-    this.showSkeleton(true);
+    this.showSkeleton();
 
     try {
-      let response = await fetch(BACKEND_URL + '/' + this.url + '?from=' + from + '&to=' + to);
+      let response = await fetch(this.createUrl(from, to));
 
       let loadedData = await response.json();
 
@@ -77,7 +77,7 @@ export default class ColumnChart extends LJSBase {
 
       this.subElements.body.innerHTML = this.fill();
 
-      this.showSkeleton(false);
+      this.hideSkeleton();
 
       return loadedData;
     }
@@ -86,9 +86,16 @@ export default class ColumnChart extends LJSBase {
     }
   }
 
-  showSkeleton(isShow) {
-    isShow ? this.element.classList.add('column-chart_loading') : 
-             this.element.classList.remove('column-chart_loading');
+  createUrl(from, to) {
+    return (`${BACKEND_URL}/${this.url}?from=${from}&to=${to}`);
+  }
+
+  hideSkeleton() {
+    this.element.classList.remove('column-chart_loading');
+  }
+
+  showSkeleton() {
+    this.element.classList.add('column-chart_loading');
   }
 
   fill() {
