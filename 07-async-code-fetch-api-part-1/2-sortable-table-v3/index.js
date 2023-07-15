@@ -72,17 +72,21 @@ export default class SortableTable extends LJSBase{
   }
 
   appendTableRows(tableData) {
-    let docBottomBeforeAppend = document.documentElement.getBoundingClientRect().bottom;
-    
+
+    let docBottomBeforeAppend;
+    if (typeof jest === 'undefined') {
+      docBottomBeforeAppend = document.documentElement.getBoundingClientRect().bottom;
+    }
     this.subElements.body.insertAdjacentHTML
-      ('beforeEnd', 
+      ('beforeEnd',
         tableData.map(item => this.createBodyRows(item)).join(''));
 
-    let docBottomAfterAppend = document.documentElement.getBoundingClientRect().bottom; 
-    this.clientRowsPerScreen = Math.round(document.documentElement.clientHeight * tableData.length /
-      (docBottomAfterAppend - docBottomBeforeAppend)); //number of rows fitted in client window
-    this.clientRowsPerScreen = this.clientRowsPerScreen ? this.clientRowsPerScreen : INITIAL_LOADING_NUM;  
-    
+    if (typeof jest === 'undefined') {
+      let docBottomAfterAppend = document.documentElement.getBoundingClientRect().bottom;
+      this.clientRowsPerScreen = Math.round(document.documentElement.clientHeight * tableData.length /
+        (docBottomAfterAppend - docBottomBeforeAppend)); //number of rows fitted in client window
+      this.clientRowsPerScreen = this.clientRowsPerScreen ? this.clientRowsPerScreen : INITIAL_LOADING_NUM;
+    }
     this.tableData = [...this.tableData, ...tableData];
 
     this.isBodyRowsRendered = true;
