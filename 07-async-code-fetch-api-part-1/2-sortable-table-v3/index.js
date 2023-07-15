@@ -24,24 +24,27 @@ export default class SortableTable extends LJSBase{
     this.tableDataRequestIndex = 0;
     this.clientRowsPerScreen = INITIAL_LOADING_NUM;
 
+    this.build();
     this.render();
   }
 
-  async render() {
+  build() {
     this.element = this.createElement(this.createTable());
     this.subElements = {
       header: this.element.querySelector('[data-element="header"]'),
       body: this.element.querySelector('[data-element="body"]')
     };
-    this.createEventListeners();  //-- если вынести в конструктор, то тесты успевают 
-                                  //-- сделать клик после вызова render() до того, 
-                                  //-- как установятся обработчик событий клика
+    this.createEventListeners();
+  }
+
+  async render() {
     this.isBodyRowsRendered = false;
+    this.clearTable();
     if (this.isSortLocally)
     {
       this.appendTableRows(await this.loadTableData(INITIAL_LOADING_NUM));
- //     if (this.clientRowsPerScreen > INITIAL_LOADING_NUM)
- //       this.appendTableRows(await this.loadTableData(this.clientRowsPerScreen * 2 - INITIAL_LOADING_NUM));
+      if (this.clientRowsPerScreen > INITIAL_LOADING_NUM)
+        this.appendTableRows(await this.loadTableData(this.clientRowsPerScreen * 2 - INITIAL_LOADING_NUM));
     }
     await this.sort(this.id, this.order);
   }
