@@ -43,8 +43,8 @@ export default class SortableTable extends LJSBase{
     if (this.isSortLocally)
     {
       this.appendTableRows(await this.loadTableData(INITIAL_LOADING_NUM));
-//      if (this.clientRowsPerScreen > INITIAL_LOADING_NUM)
-//        this.appendTableRows(await this.loadTableData(this.clientRowsPerScreen * 2 - INITIAL_LOADING_NUM));
+      if (this.clientRowsPerScreen > INITIAL_LOADING_NUM)
+        this.appendTableRows(await this.loadTableData(this.clientRowsPerScreen * 2 - INITIAL_LOADING_NUM));
     }
     await this.sort(this.id, this.order);
   }
@@ -80,7 +80,8 @@ export default class SortableTable extends LJSBase{
 
     let docBottomAfterAppend = document.documentElement.getBoundingClientRect().bottom; 
     this.clientRowsPerScreen = Math.round(document.documentElement.clientHeight * tableData.length /
-      (docBottomAfterAppend - docBottomBeforeAppend)); //number of rows fitted in client window 
+      (docBottomAfterAppend - docBottomBeforeAppend)); //number of rows fitted in client window
+    this.clientRowsPerScreen = this.clientRowsPerScreen ? this.clientRowsPerScreen : INITIAL_LOADING_NUM;  
     
     this.tableData = [...this.tableData, ...tableData];
 
