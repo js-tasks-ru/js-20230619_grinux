@@ -43,7 +43,7 @@ export default class ProductForm extends LJSBase {
       imageListContainer: this.imgListElement
     }
 
-    this.createEventLiateners();
+    this.createEventListeners();
     return this.element;
   }
 
@@ -141,10 +141,10 @@ export default class ProductForm extends LJSBase {
       .join('');
   }
 
-  appendImgList(images) {
+  appendImgList(image) {
     this.imgListElement.insertAdjacentHTML
       ('beforeEnd',
-        this.createImgList(images));
+        this.createImgList([image]));
   }
 
   async onFormSubmit(event) {
@@ -216,10 +216,10 @@ export default class ProductForm extends LJSBase {
         source: response.data.link.replace(/.*[\/\\]/, '')
       };
 
-      this.appendImgList([{
+      this.appendImgList({
         url: uploadedImgInfo.url,
         source: uploadImgFileName
-      }]);
+      });
 
       this.product.images.push(uploadedImgInfo);
 
@@ -243,15 +243,102 @@ export default class ProductForm extends LJSBase {
     return response;
   }
 
-  onDeleteImgClick(event) {
-    let deleteBtn = event.target.closest('button');
-    if (deleteBtn) {
-      const imgToDelete = deleteBtn.parentElement;
-      const imgSourceName = imgToDelete.querySelector('[name="source"]').value;
-      this.product.images.
-        splice(this.product.images.findIndex(image => image.source === imgSourceName), 1);
-      imgToDelete.remove();
+  onImgListPointerup(event) {
+    if ('deleteHandle' in event.target.dataset)
+      this.handleDeleteImg(event);
+    if (this.movingImgElement)
+      this.handleImgMoveEnd();
+  }
+
+  onImgListPointerdown(event) {
+    if ('grabHandle' in event.target.dataset) {
+      
+      event.target.ondragstart = () => false;
+
+      const currentScroll = document.documentElement.scrollTop || document.body.scrollTop;
+      const imgListFirstElementTop = this.imgListElement.firstElementChild.getBoundingClientRect().top + currentScroll;
+      const imgListLastElementTop = this.imgListElement.lastElementChild.getBoundingClientRect().top + currentScroll;
+      this.imgElementWidth = (imgListLastElementTop - imgListFirstElementTop) / (this.imgListElement.children.length - 1);
+
+      this.imgChangePositionBorders = [...this.imgListElement.children].map((_, index) => 
+        imgListFirstElementTop + this.imgElementWidth * index + this.imgElementWidth / 2);
+
+      this.movingImgElement = event.target.parentElement.parentElement;
+      const movingImgPosition = this.movingImgElement.getBoundingClientRect();
+      this.shiftY = event.clientY - movingImgPosition.top;
+      this.shiftX = event.clientX - movingImgPosition.left;
+      
+      this.movingImgIndex = [...this.imgListElement.children].indexOf(this.movingImgElement);
+      this.imgListPlaceholderElement = this.createElement(`
+        <div class="sortable-list__placeholder" style="width: ${movingImgPosition.width}px; height: ${movingImgPosition.height}px;"></div>`);
+      this.imgListElement.replaceChild(this.imgListPlaceholderElement, this.movingImgElement);
+      this.imgListElement.appendChild(this.movingImgElement);
+
+      this.movingImgElement.classList.add('sortable-list__item_dragging');
+      this.movingImgElement.style.left = event.clientX - this.shiftX + 'px';
+      this.movingImgElement.style.top = event.clientY - this.shiftY + 'px';
+      this.movingImgElement.style.width = movingImgPosition.width + 'px';
+      this.movingImgElement.style.height = movingImgPosition.height + 'px';
+
+      document.addEventListener('pointermove', this.handleImgMove);
     }
+  }
+
+
+
+  handleImgMove(event) {
+    this.movingImgElement.style.top = event.clientY - this.shiftY + 'px';
+
+    const newMovingImgPosition = event.clientY - this.shiftY + document.documentElement.scrollTop || document.body.scrollTop;
+
+    const newMovingImgIndex = this.getNewMovingImgIndex(this.movingImgIndex, newMovingImgPosition);
+    if (newMovingImgIndex != this.movingImgIndex)
+      this.setImgNewIndex(newMovingImgIndex);
+  }
+
+  getNewMovingImgIndex(oldIndex, newPosition) {
+    let newIndex = oldIndex;
+
+    for (; ;) {
+      if (newIndex < this.imgChangePositionBorders.length - 1 &&
+        newPosition >= this.imgChangePositionBorders[newIndex])
+        newIndex++;
+      else if (newIndex && newPosition <= this.imgChangePositionBorders[newIndex - 1])
+        newIndex--;
+      break;
+    }
+    return newIndex;
+  }
+
+  setImgNewIndex(newIndex) {
+    this.imgListElement.children[newIndex]
+      .insertAdjacentElement(newIndex > this.movingImgIndex ? 'afterend' : 'beforebegin',
+        this.imgListPlaceholderElement);
+    this.movingImgIndex = newIndex;
+  }
+
+  handleImgMoveEnd() {
+      document.removeEventListener('pointermove', this.handleImgMove);
+
+      this.imgListElement.lastElementChild.remove();
+      this.imgListElement.replaceChild(this.movingImgElement, this.imgListPlaceholderElement);
+      
+      this.movingImgElement.classList.remove('sortable-list__item_dragging');
+      this.movingImgElement.style.left = '';
+      this.movingImgElement.style.top = '';
+      this.movingImgElement.style.width = '';
+      this.movingImgElement.style.height = '';
+      this.movingImgElement = null;
+  }
+
+  handleDeleteImg(event) {
+    const imgToDelete = event.target.parentElement.parentElement;
+    const imgSourceName = imgToDelete.querySelector('[name="source"]').value;
+
+    this.product.images.
+      splice(this.product.images.findIndex(image => image.source === imgSourceName), 1);
+
+    imgToDelete.remove();
   }
 
   setUploadImgButtonStatusLoading(isLoading) {
@@ -265,22 +352,22 @@ export default class ProductForm extends LJSBase {
     }
   }
   
-  createEventLiateners() {
+  createEventListeners() {
     this.onFormSubmit = this.onFormSubmit.bind(this);
     this.onUploadImgButtonClick = this.onUploadImgButtonClick.bind(this);
-    this.onDeleteImgClick = this.onDeleteImgClick.bind(this);
+    this.onImgListPointerup = this.onImgListPointerup.bind(this);
+    this.handleImgMove = this.handleImgMove.bind(this);
+    this.onImgListPointerdown = this.onImgListPointerdown.bind(this);
 
-    this.imgListElement.addEventListener('pointerup', this.onDeleteImgClick);
+    document.addEventListener('pointerup', this.onImgListPointerup);
+    this.imgListElement.addEventListener('pointerdown', this.onImgListPointerdown);
     this.formElement.addEventListener('submit', this.onFormSubmit);
     this.btnUploadImgElement.addEventListener('pointerup', this.onUploadImgButtonClick);
 
   }
 
   removeEventListeners() {
-
-    this.imgListElement.removeEventListener('pointerup', this.onDeleteImgClick);
-    this.formElement.removeEventListener('submit', this.onFormSubmit);
-    this.btnUploadImgElement.removeEventListener('pointerup', this.onUploadImgButtonClick);  
+    document.removeEventListener('pointerup', this.onImgListPointerup);
   }
 
   destroy() {
