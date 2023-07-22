@@ -1,7 +1,11 @@
 import LJSBase from '../../components/LJSBase.js'
 
 const defaultToDate = () => new Date();
-const defaultFromDate = to => new Date(to.getFullYear(), to.getMonth() - 1, to.getDate()); 
+const defaultFromDate = to => {
+  let date = new Date(to);
+  date.setMonth(date.getMonth() - 1);
+  return date;
+}
 
 export default class RangePicker extends LJSBase {
   constructor(
@@ -24,8 +28,8 @@ export default class RangePicker extends LJSBase {
     this.controlLeftElement = this.calendarElement.querySelector('.rangepicker__selector-control-left');
     this.controlRightElement = this.calendarElement.querySelector('.rangepicker__selector-control-right');
     
-    this.from.setHours(0, 0, 0, 0);
-    this.to.setHours(0, 0, 0, 0);
+    this.from.setSeconds(0,0);
+    this.to.setSeconds(0,0);
     
     this.setCalendarSelectionRange();
     this.isRangeSelected = true;
@@ -53,7 +57,7 @@ export default class RangePicker extends LJSBase {
       <div class="rangepicker__selector-control-left"></div>
       <div class="rangepicker__selector-control-right"></div>
       <div class="rangepicker__calendar">
-        ${this.createMonth(new Date(this.to.getFullYear(), this.to.getMonth() - 1, this.to.getDate()))}
+        ${this.createMonth(defaultFromDate(this.to))}
       </div>
       <div class="rangepicker__calendar">
         ${this.createMonth(this.to)}
@@ -89,6 +93,7 @@ export default class RangePicker extends LJSBase {
   createDaysOfMonth(boundaryDate) {
     const monthDaysNum = new Date(boundaryDate.getFullYear(), boundaryDate.getMonth() + 1, 0).getDate();
     let date = new Date(boundaryDate.getFullYear(), boundaryDate.getMonth(), 1);
+    date.setHours(this.from.getHours(), this.to.getMinutes());
     const monthStartDayOfWeek = date.getDay();
     let daysList = [];
 
@@ -204,7 +209,8 @@ export default class RangePicker extends LJSBase {
       this.createMonth(new Date(this.rightDisplayedMonth.getFullYear(),
         this.rightDisplayedMonth.getMonth() - 1,
         this.rightDisplayedMonth.getDate()));
-   this.setCalendarSelectionRange();    
+   if (this.isRangeSelected === true)
+    this.setCalendarSelectionRange();    
   }
 
   handleCalendarCellClick(clickedCellElement) {
@@ -226,7 +232,19 @@ export default class RangePicker extends LJSBase {
       else
         this.to = clickedCellDate;
       this.setCalendarSelectionRange();
+      this.dispatchEvent();
+      this.closeCalendar();
     }
+  }
+
+  dispatchEvent() {
+    this.element.dispatchEvent(new CustomEvent('date-select', {
+      bubbles: true,
+      detail: { 
+        from: this.from, 
+        to: this.to
+      }
+    }));
   }
 
   createEventListeners() {
