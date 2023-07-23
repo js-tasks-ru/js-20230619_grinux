@@ -5,7 +5,7 @@ import LJSBase from '../../components/LJSBase.js'
 
 const IMGUR_CLIENT_ID = '28aaa2e823b03b1';
 const BACKEND_URL = 'https://course-js.javascript.ru';
-const API_URL = 'api/rest'
+const API_URL = '/api/rest/'
 
 export default class ProductForm extends LJSBase {
 
@@ -27,10 +27,18 @@ export default class ProductForm extends LJSBase {
   }
 
   async render() {
-    this.categories = await fetchJson(this.getCategoriesUrl());
+    let url = new URL('categories', BACKEND_URL + API_URL);
+    url.searchParams.set('_sort', 'weight');
+    url.searchParams.set('_refs', 'subcategory');
+
+    this.categories = await fetchJson(url);
 
     if (this.productId) {
-      this.product = (await fetchJson(this.getProductUrl(this.productId)))[0];
+      let url = new URL('products', BACKEND_URL + API_URL);
+      url.searchParams.set('id', this.productId);
+
+      const response = await fetchJson(url);
+      this.product = response[0];
     }
 
     this.element = this.createElement(this.createProductForm());
@@ -49,10 +57,6 @@ export default class ProductForm extends LJSBase {
 
     this.createEventListeners();
     return this.element;
-  }
-
-  getProductUrl(id) {
-    return (`${BACKEND_URL}/${API_URL}/products?id=${id}`);
   }
 
   getCategoriesUrl() {
@@ -88,22 +92,22 @@ export default class ProductForm extends LJSBase {
         <div class="form-group form-group__half_left form-group__two-col">
           <fieldset>
             <label class="form-label">Цена ($)</label>
-            <input value="${this.product ? this.product.price : ''}" required="" type="number" id="price" name="price" class="form-control" placeholder="100">
+            <input value="${this.product ? escapeHtml(this.product.price.toString()) : ''}" required="" type="number" id="price" name="price" class="form-control" placeholder="100">
           </fieldset>
           <fieldset>
             <label class="form-label">Скидка ($)</label>
-            <input value="${this.product ? this.product.discount : ''}"required="" type="number" id="discount" name="discount" class="form-control" placeholder="0">
+            <input value="${this.product ? escapeHtml(this.product.discount.toString()) : ''}"required="" type="number" id="discount" name="discount" class="form-control" placeholder="0">
           </fieldset>
         </div>
         <div class="form-group form-group__part-half">
           <label class="form-label">Количество</label>
-          <input value="${this.product ? this.product.quantity : ''}"required="" type="number" class="form-control" id="quantity" name="quantity" placeholder="1">
+          <input value="${this.product ? escapeHtml(this.product.quantity.toString()) : ''}"required="" type="number" class="form-control" id="quantity" name="quantity" placeholder="1">
         </div>
         <div class="form-group form-group__part-half">
           <label class="form-label">Статус</label>
           <select class="form-control" id="status" name="status">
-            <option ${this.product ? this.product.status === 1 ? `selected` : '' : ''} value="1">Активен</option>
-            <option ${this.product ? this.product.status === 0 ? `selected` : '' : ''} value="0">Неактивен</option>
+            <option ${this.product && this.product.status === 1 ? `selected` : ''} value="1">Активен</option>
+            <option ${this.product && this.product.status === 0 ? `selected` : ''} value="0">Неактивен</option>
           </select>
         </div>
         <div class="form-buttons">
@@ -148,10 +152,10 @@ export default class ProductForm extends LJSBase {
   async onFormSubmit(event) {
     event.preventDefault();
     let editedProduct = {};
-    Object.entries(this.product).map(entry => {
-      const fieldName = this.formElement.querySelector(`[name="${entry[0]}"]`);
+    Object.entries(this.product).map(([name]) => {
+      const fieldName = this.formElement.querySelector(`[name="${name}"]`);
       if (fieldName) {
-        editedProduct[entry[0]] = this.numericFieldsNames.includes(entry[0]) ? 
+        editedProduct[name] = this.numericFieldsNames.includes(name) ? 
             parseFloat(fieldName.value) : fieldName.value;
       }
     });
@@ -188,7 +192,7 @@ export default class ProductForm extends LJSBase {
   }
 
   async uploadProduct(product, isNew) {
-    return await fetchJson(`${BACKEND_URL}/${API_URL}/products`, {
+    return await fetchJson(new URL('products', BACKEND_URL + API_URL), {
       method: isNew ? 'PUT' : 'PATCH',
       headers: {
         "Content-Type": "application/json",
