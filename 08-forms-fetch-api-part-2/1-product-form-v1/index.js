@@ -29,10 +29,11 @@ export default class ProductForm extends LJSBase {
     this.categories = await fetchJson(this.getCategoriesUrl());
 
     if (this.productId) {
-      this.product = (await fetchJson(this.getProductUrl(this.productId)))[0];
+      const response = await fetchJson(this.getProductUrl(this.productId));
+      this.product = response[0];
     }
 
-    this.element = this.createElement(this.createProductForm());
+    this.element = this.createElement(this.createProductFormTemplate());
 
     this.formElement = this.element.querySelector('[data-element="productForm"]');
     this.btnUploadImgElement = this.element.querySelector('[name="uploadImage"]');
@@ -55,7 +56,7 @@ export default class ProductForm extends LJSBase {
     return (`${BACKEND_URL}/${API_URL}/categories?_sort=weight&_refs=subcategory`);
   }
 
-  createProductForm() {
+  createProductFormTemplate() {
     return (`
     <div class="product-form">
       <form data-element="productForm" class="form-grid">
@@ -209,7 +210,7 @@ export default class ProductForm extends LJSBase {
 
       const uploadImgFileName = uploadImgInputElement.value.replace(/.*[\/\\]/, '');
 
-      let response = await this.uploadImage(uploadImgInputElement.files[0]);
+      const response = await this.uploadImage(uploadImgInputElement.files[0]);
 
       const uploadedImgInfo = {
         url: response.data.link,
@@ -230,7 +231,7 @@ export default class ProductForm extends LJSBase {
   async uploadImage(image) {
     this.setUploadImgButtonStatusLoading(true);
 
-    let response = await fetchJson('https://api.imgur.com/3/image', {
+    const response = await fetchJson('https://api.imgur.com/3/image', {
       method: 'POST',
       headers: {
         "Authorization": `Client-ID ${IMGUR_CLIENT_ID}`
