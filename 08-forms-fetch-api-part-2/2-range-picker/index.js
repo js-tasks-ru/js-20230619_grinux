@@ -1,11 +1,5 @@
 import LJSBase from '../../components/LJSBase.js'
-
-const defaultToDate = () => new Date();
-const defaultFromDate = to => {
-  let date = new Date(to);
-  date.setMonth(date.getMonth() - 1);
-  return date;
-}
+import { defaultToDate, defaultFromDate } from '../../components/defaultDate.js'
 
 export default class RangePicker extends LJSBase {
   constructor(
