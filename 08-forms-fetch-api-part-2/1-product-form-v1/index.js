@@ -102,8 +102,8 @@ export default class ProductForm extends LJSBase {
         <div class="form-group form-group__part-half">
           <label class="form-label">Статус</label>
           <select class="form-control" id="status" name="status">
-            <option ${this.product ? this.product.status === 1 ? `selected` : '' : ''} value="1">Активен</option>
-            <option ${this.product ? this.product.status === 0 ? `selected` : '' : ''} value="0">Неактивен</option>
+            <option ${this.product && this.product.status === 1 ? `selected` : ''} value="1">Активен</option>
+            <option ${this.product && this.product.status === 0 ? `selected` : ''} value="0">Неактивен</option>
           </select>
         </div>
         <div class="form-buttons">
