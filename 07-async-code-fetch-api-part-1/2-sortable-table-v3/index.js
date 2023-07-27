@@ -11,12 +11,18 @@ export default class SortableTable extends LJSBase{
       id: headerConfig.find(item => item.sortable).id,
       order: 'asc' 
     }
-    const { url = '', isSortLocally = false, sorted = defaultSorted } = params;
+    const {
+      url = '',
+      isSortLocally = false,
+      sorted = defaultSorted,
+      infinityScroll = true
+    } = params;
 
     super();
     this.headerConfig = headerConfig;
-    this.url = url;
+    this.url = new URL(url, BACKEND_URL);
     this.isSortLocally = isSortLocally;
+    this.infinityScroll = infinityScroll;
     this.id = sorted.id;
     this.order = sorted.order;
 
@@ -108,17 +114,19 @@ export default class SortableTable extends LJSBase{
     this.subElements.body.innerHTML = '';
   }
 
+  rebuildTable(tableData) {
+    this.clearTable(); 
+    this.appendTableRows(tableData);
+  }
+
   async sort(field, order) {
     if (this.isSortLocally)
       this.sortOnClient(field, order);
     else
       await this.sortOnServer(field, order);
-
-    this.clearTable(); 
-    this.appendTableRows(this.tableData);
   }
 
-  async sortOnServer(field, order) {
+  async sortOnServer(field = this.id, order = this.order) {
     this.tableDataRequestIndex = 0;
     this.tableData = [];
     this.id = field;
@@ -127,8 +135,11 @@ export default class SortableTable extends LJSBase{
     this.setSortColumnStyle();
 
     this.showSkeleton(true);
-    this.tableData = await this.loadTableData(this.clientRowsPerScreen * 2);
+    let loadedTableData = await this.loadTableData
+      (this.infinityScroll ? this.clientRowsPerScreen * 2 : INITIAL_LOADING_NUM);
     this.showSkeleton(false);
+
+    this.rebuildTable(loadedTableData);
   }
 
   sortOnClient(field, order) {
@@ -138,7 +149,7 @@ export default class SortableTable extends LJSBase{
     
     this.setSortColumnStyle();
 
-    this.tableData.sort((a, b) => {
+    const sortedTableData = [...this.tableData.sort((a, b) => {
       if (sort_type == 'number')
         return this.order === 'desc' ? b[this.id] - a[this.id] : a[this.id] - b[this.id];
       else
@@ -146,7 +157,10 @@ export default class SortableTable extends LJSBase{
           b[this.id].toString().localeCompare(a[this.id].toString(), ['ru-RU'], { caseFirst: 'upper' }) :
           a[this.id].toString().localeCompare(b[this.id].toString(), ['ru-RU'], { caseFirst: 'upper' });
 
-    });
+    })];
+    this.tableData = [];
+
+    this.rebuildTable(sortedTableData);
   }
 
   showSkeleton(isShow) {
@@ -171,23 +185,16 @@ export default class SortableTable extends LJSBase{
   }
 
   async loadTableData(itemNum) {
-    try {
-      let response = await fetch(this.createUrl(this.tableDataRequestIndex, itemNum));
-      this.tableDataRequestIndex += itemNum;
-      return await response.json();
+    this.url.searchParams.set('_sort', this.id);
+    this.url.searchParams.set('_order', this.order);
+    this.url.searchParams.set('_start', this.tableDataRequestIndex);
+    this.url.searchParams.set('_end', this.tableDataRequestIndex + itemNum);
 
-    } catch (err) {
-      throw new Error(`Network error has occurred: ${err}`);
-    }
-  }
+    let response = await fetchJson(this.url);
 
-  createUrl(startIdx, requestNum) {
-    return (` 
-      ${BACKEND_URL}/${this.url}?
-      _start=${startIdx}&
-      _end=${startIdx + requestNum}
-      ${!this.isSortLocally ? `&_sort=${this.id}&_order=${this.order}` : ''}`
-    .replace(/(\r\n|\n|\r| )/gm, ""));
+    this.tableDataRequestIndex += itemNum;
+
+    return response;
   }
 
   async handleWindowScroll() {
@@ -209,7 +216,8 @@ export default class SortableTable extends LJSBase{
         this.sort(th.getAttribute('data-id'), order === 'desc' ? 'asc' : 'desc');
       }
     });
-    window.addEventListener('scroll', this.handleWindowScroll); 
+    if (this.infinityScroll)
+      window.addEventListener('scroll', this.handleWindowScroll); 
   }
 
   destroy() {

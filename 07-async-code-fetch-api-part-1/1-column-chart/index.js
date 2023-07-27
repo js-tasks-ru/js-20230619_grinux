@@ -62,32 +62,24 @@ export default class ColumnChart extends LJSBase {
   }
 
   async update(from, to) {
-    
     this.showSkeleton();
 
-    try {
-      let response = await fetch(this.createUrl(from, to));
+    this.url = new URL(this.url, BACKEND_URL);
+    this.url.searchParams.set('from', from);
+    this.url.searchParams.set('to', to);
+    
+    let response = await fetchJson(this.url);
 
-      let loadedData = await response.json();
+    this.chartData = Object.entries(response).map(entry => entry[1]);
 
-      this.chartData = Object.entries(loadedData).map(entry => entry[1]);
+    if (!this.chartData.length)
+      return;
 
-      if (!this.chartData.length)
-        return;
+    this.subElements.body.innerHTML = this.fill();
 
-      this.subElements.body.innerHTML = this.fill();
+    this.hideSkeleton();
 
-      this.hideSkeleton();
-
-      return loadedData;
-    }
-    catch (err) {
-      throw new Error(`Network error has occurred: ${err}`);
-    }
-  }
-
-  createUrl(from, to) {
-    return (`${BACKEND_URL}/${this.url}?from=${from}&to=${to}`);
+    return response;
   }
 
   hideSkeleton() {
