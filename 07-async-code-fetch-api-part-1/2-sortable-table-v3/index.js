@@ -1,4 +1,4 @@
-import fetchJson from './utils/fetch-json.js';
+import fetchJson from '../../components/fetch-json.js';
 import LJSBase from '../../components/LJSBase.js';
 
 const BACKEND_URL = 'https://course-js.javascript.ru';
@@ -56,7 +56,7 @@ export default class SortableTable extends LJSBase{
   }
 
   createTable() {
-  return (`
+    return (`
   <div class="sortable-table">
     <div data-element="header" class="sortable-table__header sortable-table__row">
       ${this.createHeaderRows()}
@@ -65,7 +65,7 @@ export default class SortableTable extends LJSBase{
     </div>
   </div>
   `);
-}
+  }
 
   createHeaderRows() {
     return this.headerConfig
@@ -91,16 +91,19 @@ export default class SortableTable extends LJSBase{
       let docBottomAfterAppend = document.documentElement.getBoundingClientRect().bottom;
       this.clientRowsPerScreen = Math.round(document.documentElement.clientHeight * tableData.length /
         (docBottomAfterAppend - docBottomBeforeAppend)); //number of rows fitted in client window
-      this.clientRowsPerScreen = this.clientRowsPerScreen ? this.clientRowsPerScreen : INITIAL_LOADING_NUM;
+      if (!this.clientRowsPerScreen || this.clientRowsPerScreen === Infinity || this.clientRowsPerScreen === NaN)
+        this.clientRowsPerScreen = INITIAL_LOADING_NUM;
     }
     this.tableData = [...this.tableData, ...tableData];
 
     this.isBodyRowsRendered = true;
+
+    return tableData.length;
   }
 
   createBodyRows(item) {
     return (`
-      <a href="/products/${item['id']}" class="sortable-table__row">
+      <a href="${BACKEND_URL}/products/${item['id']}" class="sortable-table__row">
         ${this.headerConfig
           .map(th => th.template ? th.template(item[th.id]) : 
               `<div class="sortable-table__cell">${item[th.id]}</div>`)
@@ -116,7 +119,7 @@ export default class SortableTable extends LJSBase{
 
   rebuildTable(tableData) {
     this.clearTable(); 
-    this.appendTableRows(tableData);
+    return this.appendTableRows(tableData);
   }
 
   async sort(field, order) {
@@ -139,7 +142,7 @@ export default class SortableTable extends LJSBase{
       (this.infinityScroll ? this.clientRowsPerScreen * 2 : INITIAL_LOADING_NUM);
     this.showSkeleton(false);
 
-    this.rebuildTable(loadedTableData);
+    return this.rebuildTable(loadedTableData);
   }
 
   sortOnClient(field, order) {
@@ -179,7 +182,8 @@ export default class SortableTable extends LJSBase{
     this.subElements.sortElement.setAttribute("data-order", this.order);
     this.subElements.sortElement.appendChild(this.createElement(`
       <span data-element="arrow" class="sortable-table__sort-arrow">
-        <span class="sort-arrow"></span>
+        <span class="sort-arrow 
+        ${this.order === 'desc' ? 'sortable-table__sort-arrow_desc' : 'sortable-table__sort-arrow_asc'}"></span>
       </span>
     `));
   }
@@ -198,9 +202,11 @@ export default class SortableTable extends LJSBase{
   }
 
   async handleWindowScroll() {
-    if (document.documentElement.getBoundingClientRect().bottom < 
-        document.documentElement.clientHeight + 100 && 
-        this.isBodyRowsRendered) {
+    if (document.contains(this.element) &&
+        this.isBodyRowsRendered &&
+        document.documentElement.getBoundingClientRect().bottom < 
+        document.documentElement.clientHeight + 100
+        ) {
       this.isBodyRowsRendered = false;
       this.appendTableRows(await this.loadTableData(this.clientRowsPerScreen));
     }
