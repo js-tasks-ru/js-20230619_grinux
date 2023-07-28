@@ -1,5 +1,5 @@
 import escapeHtml from './utils/escape-html.js';
-import fetchJson from './utils/fetch-json.js';
+import fetchJson from '../../components/fetch-json.js';
 import LJSBase from '../../components/LJSBase.js'
 
 const IMGUR_CLIENT_ID = '28aaa2e823b03b1';
