@@ -1,6 +1,6 @@
 import SortableList from '../2-sortable-list/index.js';
 import escapeHtml from './utils/escape-html.js';
-import fetchJson from './utils/fetch-json.js';
+import fetchJson from '../../components/fetch-json.js';
 import LJSBase from '../../components/LJSBase.js'
 
 const IMGUR_CLIENT_ID = '28aaa2e823b03b1';
@@ -13,6 +13,7 @@ export default class ProductForm extends LJSBase {
 
   constructor(productId) {
     super();
+    
     this.productId = productId;
     this.product = {
       description: '',
@@ -27,6 +28,11 @@ export default class ProductForm extends LJSBase {
   }
 
   async render() {
+    this.element = this.createElement(this.createProductFormRoot());
+
+    if (typeof jest === 'undefined') //Jest does not support import.meta
+      this.getCWD = (await import('/components/importMeta.js')).default;
+
     let url = new URL('categories', BACKEND_URL + API_URL);
     url.searchParams.set('_sort', 'weight');
     url.searchParams.set('_refs', 'subcategory');
@@ -38,10 +44,11 @@ export default class ProductForm extends LJSBase {
       url.searchParams.set('id', this.productId);
 
       const response = await fetchJson(url);
-      this.product = response[0];
+      if (response.length)
+        this.product = response[0];
     }
 
-    this.element = this.createElement(this.createProductForm());
+    this.element.append(this.createElement(this.createProductForm()));
     this.formElement = this.element.querySelector('[data-element="productForm"]');
     this.btnUploadImgElement = this.element.querySelector('[name="uploadImage"]');
     this.imgListContainer = this.element.querySelector('[data-element="imageListContainer"]');
@@ -63,60 +70,62 @@ export default class ProductForm extends LJSBase {
     return (`${BACKEND_URL}/${API_URL}/categories?_sort=weight&_refs=subcategory`);
   }
 
+  createProductFormRoot() {
+    return (`<div class="product-form"></div>`);
+  }
+
   createProductForm() {
     return (`
-    <div class="product-form">
-      <form data-element="productForm" class="form-grid">
-        <div class="form-group form-group__half_left">
-          <fieldset>
-            <label class="form-label">Название товара</label>
-            <input value="${escapeHtml(this.product.title)}" required="" type="text" id="title" name="title" class="form-control" placeholder="Название товара">
-          </fieldset>
+    <form data-element="productForm" class="form-grid">
+      <div class="form-group form-group__half_left">
+        <fieldset>
+          <label class="form-label">Название товара</label>
+          <input value="${escapeHtml(this.product.title)}" required="" type="text" id="title" name="title" class="form-control" placeholder="Название товара">
+        </fieldset>
+      </div>
+      <div class="form-group form-group__wide">
+        <label class="form-label">Описание</label>
+        <textarea required="" class="form-control" id="description" name="description" data-element="productDescription" placeholder="Описание товара">${escapeHtml(this.product.description)}</textarea>
+      </div>
+      <div class="form-group form-group__wide" data-element="sortable-list-container">
+        <label class="form-label">Фото</label>
+        <div data-element="imageListContainer">
         </div>
-        <div class="form-group form-group__wide">
-          <label class="form-label">Описание</label>
-          <textarea required="" class="form-control" id="description" name="description" data-element="productDescription" placeholder="Описание товара">${escapeHtml(this.product.description)}</textarea>
-        </div>
-        <div class="form-group form-group__wide" data-element="sortable-list-container">
-          <label class="form-label">Фото</label>
-          <div data-element="imageListContainer">
-          </div>
-          <button type="button" name="uploadImage" class="button-primary-outline"><span>Загрузить</span></button>
-        </div>
-        <div class="form-group form-group__half_left">
-          <label class="form-label">Категория</label>
-          <select class="form-control" name="subcategory" id="subcategory">
-            ${this.createCategoriesList(this.categories)}
-          </select>
-        </div>
-        <div class="form-group form-group__half_left form-group__two-col">
-          <fieldset>
-            <label class="form-label">Цена ($)</label>
-            <input value="${this.product ? escapeHtml(this.product.price.toString()) : ''}" required="" type="number" id="price" name="price" class="form-control" placeholder="100">
-          </fieldset>
-          <fieldset>
-            <label class="form-label">Скидка ($)</label>
-            <input value="${this.product ? escapeHtml(this.product.discount.toString()) : ''}"required="" type="number" id="discount" name="discount" class="form-control" placeholder="0">
-          </fieldset>
-        </div>
-        <div class="form-group form-group__part-half">
-          <label class="form-label">Количество</label>
-          <input value="${this.product ? escapeHtml(this.product.quantity.toString()) : ''}"required="" type="number" class="form-control" id="quantity" name="quantity" placeholder="1">
-        </div>
-        <div class="form-group form-group__part-half">
-          <label class="form-label">Статус</label>
-          <select class="form-control" id="status" name="status">
-            <option ${this.product && this.product.status === 1 ? `selected` : ''} value="1">Активен</option>
-            <option ${this.product && this.product.status === 0 ? `selected` : ''} value="0">Неактивен</option>
-          </select>
-        </div>
-        <div class="form-buttons">
-          <button type="submit" name="save" class="button-primary-outline">
-            Сохранить товар
-          </button>
-        </div>
-      </form>
-    </div>
+        <button type="button" name="uploadImage" class="button-primary-outline"><span>Загрузить</span></button>
+      </div>
+      <div class="form-group form-group__half_left">
+        <label class="form-label">Категория</label>
+        <select class="form-control" name="subcategory" id="subcategory">
+          ${this.createCategoriesList(this.categories)}
+        </select>
+      </div>
+      <div class="form-group form-group__half_left form-group__two-col">
+        <fieldset>
+          <label class="form-label">Цена ($)</label>
+          <input value="${this.product ? escapeHtml(this.product.price.toString()) : ''}" required="" type="number" id="price" name="price" class="form-control" placeholder="100">
+        </fieldset>
+        <fieldset>
+          <label class="form-label">Скидка ($)</label>
+          <input value="${this.product ? escapeHtml(this.product.discount.toString()) : ''}"required="" type="number" id="discount" name="discount" class="form-control" placeholder="0">
+        </fieldset>
+      </div>
+      <div class="form-group form-group__part-half">
+        <label class="form-label">Количество</label>
+        <input value="${this.product ? escapeHtml(this.product.quantity.toString()) : ''}"required="" type="number" class="form-control" id="quantity" name="quantity" placeholder="1">
+      </div>
+      <div class="form-group form-group__part-half">
+        <label class="form-label">Статус</label>
+        <select class="form-control" id="status" name="status">
+          <option ${this.product && this.product.status === 1 ? `selected` : ''} value="1">Активен</option>
+          <option ${this.product && this.product.status === 0 ? `selected` : ''} value="0">Неактивен</option>
+        </select>
+      </div>
+      <div class="form-buttons">
+        <button type="submit" name="save" class="button-primary-outline">
+          Сохранить товар
+        </button>
+      </div>
+    </form>
   `);
   }
 
@@ -128,12 +137,12 @@ export default class ProductForm extends LJSBase {
           <input type="hidden" name="url" value="${image.url}">
           <input type="hidden" name="source" value="${image.source}">
           <span>
-            <img src="icon-grab.svg" data-grab-handle="" alt="grab">
+            <img src="${this.getCWD ? this.getCWD() + '/' : ''}icon-grab.svg" data-grab-handle="" alt="grab">
             <img class="sortable-table__cell-img" alt="Image" src="${image.url}">
             <span>${image.source}</span>
           </span>
           <button type="button">
-            <img src="icon-trash.svg" data-delete-handle="" alt="delete">
+            <img src="${this.getCWD ? this.getCWD() + '/' : ''}icon-trash.svg" data-delete-handle="" alt="delete">
           </button>
         </li>`
         )
@@ -180,15 +189,18 @@ export default class ProductForm extends LJSBase {
   async save(product) {
     await this.uploadProduct(product, false);
     this.element.dispatchEvent(new CustomEvent('product-updated', {
+      detail: product?.id,
       bubbles: true
     }));
   }
 
   async create(product) {
-    await this.uploadProduct(product, true);
+    const response = await this.uploadProduct(product, true);
     this.element.dispatchEvent(new CustomEvent('product-saved', {
+      detail: response.id,
       bubbles: true
     }));
+    return response;
   }
 
   async uploadProduct(product, isNew) {
@@ -270,12 +282,12 @@ export default class ProductForm extends LJSBase {
 
     this.imgListElement.addEventListener('item-delete', this.handleImgDelete);
     this.formElement.addEventListener('submit', this.onFormSubmit);
-    this.btnUploadImgElement.addEventListener('pointerup', this.onUploadImgButtonClick);
+    this.btnUploadImgElement.addEventListener('click', this.onUploadImgButtonClick);
 
   }
 
   removeEventListeners() {
-    document.removeEventListener('pointerup', this.onImgListPointerup);
+    document.removeEventListener('click', this.onImgListPointerup);
   }
 
   destroy() {
