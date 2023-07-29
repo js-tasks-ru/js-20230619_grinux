@@ -46,7 +46,7 @@ export default class Tooltip extends LJSBase {
     if (src) {
       document.removeEventListener('pointermove', this.onDocumentPointerMove);
       this.element.remove();
-      this.element.textContent = '';
+      this.element.innerHTML = '';
     }
   }
 
@@ -56,7 +56,7 @@ export default class Tooltip extends LJSBase {
   }
 
   render(text = '') {
-    this.element.textContent = text;
+    this.element.innerHTML = text;
     document.body.appendChild(this.element);
   }
 

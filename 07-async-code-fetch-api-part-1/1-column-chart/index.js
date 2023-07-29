@@ -1,4 +1,4 @@
-import fetchJson from './utils/fetch-json.js';
+import fetchJson from '../../components/fetch-json.js';
 import LJSBase from '../../components/LJSBase.js';
 
 const BACKEND_URL = 'https://course-js.javascript.ru';

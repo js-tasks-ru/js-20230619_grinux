@@ -123,9 +123,9 @@ export default class RangePicker extends LJSBase {
   }
 
   controlCalendarSelection(isSet) {
-    let daysElements = [...this.monthLeftElement.querySelector('.rangepicker__date-grid').children];
+    let daysElements = Array.from(this.monthLeftElement.querySelector('.rangepicker__date-grid').children);
     this.controlDaysSelection(daysElements, isSet)
-    daysElements = [...this.monthRightElement.querySelector('.rangepicker__date-grid').children];
+    daysElements = Array.from(this.monthRightElement.querySelector('.rangepicker__date-grid').children);
     this.controlDaysSelection(daysElements, isSet); 
   }
 

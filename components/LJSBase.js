@@ -9,9 +9,8 @@ export default class LJSBase {
   }
 
   getSubElements(element) {
-    const elements = element.querySelectorAll('[data-element]');
     let subElements = {};
-    [...elements].forEach(subElement => {
+    element.querySelectorAll('[data-element]').forEach(subElement => {
       subElements[subElement.dataset.element] = subElement;
     });
     return subElements;

@@ -25,11 +25,11 @@ const header = [
     sortable: false,
     template: subcategory => `
     <div class="sortable-table__cell">  
-      <div data-tooltip="${escapeHtml(`
+      <span data-tooltip="${escapeHtml(`
         <div class="sortable-table-tooltip">
           <span class="sortable-table-tooltip__category">${subcategory.category.title}</span> /
           <b class="sortable-table-tooltip__subcategory">${subcategory.title}</b>
-        </div>`)}">${subcategory.title}</div>
+        </div>`)}">${subcategory.title}</span>
     </div>
     `
   },
@@ -46,10 +46,15 @@ const header = [
     sortType: 'number'
   },
   {
-    id: 'sales',
-    title: 'Sales',
+    id: 'status',
+    title: 'Status',
     sortable: true,
-    sortType: 'number'
+    sortType: 'number',
+    template: data => {
+      return `<div class="sortable-table__cell">
+          ${data > 0 ? 'Active' : 'Inactive'}
+        </div>`;
+    }
   },
 ];
 

@@ -80,6 +80,11 @@ export default class DoubleSlider extends LJSBase{
     this.toElement.textContent = this.getValue(this.to);
   }
 
+  reset() {
+    this.setRightThumbPosition(100);
+    this.setLeftThumbPosition(0);
+  }
+
   handleThumbMove(event) {
     event.preventDefault();
 
