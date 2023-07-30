@@ -31,7 +31,7 @@ export default class ProductForm extends LJSBase {
     this.element = this.createElement(this.createProductFormRoot());
 
     if (typeof jest === 'undefined') //Jest does not support import.meta
-      this.getCWD = (await import('/components/importMeta.js')).default;
+      this.getCWD = (await import('./importMeta.js')).default;
 
     let url = new URL('categories', BACKEND_URL + API_URL);
     url.searchParams.set('_sort', 'weight');

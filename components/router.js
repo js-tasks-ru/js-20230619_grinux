@@ -2,7 +2,7 @@ export default class Router {
 
   currentRoute = null;
 
-  constructor(routes, defaultRoute, container) {
+  constructor({routes, defaultRoute, container}) {
     if (!container || !routes || routes.length === 0 || !defaultRoute)
       throw new Error('Router: wrong params');
 

@@ -1,3 +1,35 @@
+class FetchState {
+  static #instance = null;
+  counter = 0;
+
+  constructor() {
+    if (!FetchState.#instance) 
+    FetchState.#instance = this;
+    else 
+      return FetchState.#instance; 
+  }
+
+  fetchStart() {
+    if (!this.counter)
+      document.dispatchEvent(new CustomEvent('fetch-active', {
+        bubbles: true
+      }));
+    this.counter++;
+  }
+
+  fetchEnd() {
+    if (!this.counter)
+      throw new Error('FetchState counter mismatch');
+    this.counter--;
+    if (!this.counter)
+      document.dispatchEvent(new CustomEvent('fetch-completed', {
+        bubbles: true
+      }));
+  }
+}
+
+const fetchState = new FetchState();
+
 // same as fetch, but throws FetchError in case of errors
 // status >= 400 is an error
 // network error / json error are errors
@@ -5,14 +37,13 @@
 export default async function(url, params) {
   let response;
 
-  const fetchObserver = new FetchObserver();
-  fetchObserver.fetchStart(); 
+  fetchState.fetchStart(); 
 
   try {
     // TODO: "toString" call needed for correct work of "jest-fetch-mock"
     response = await fetch(url.toString(), params);
   } catch (err) {
-    fetchObserver.fetchEnd(); 
+    fetchState.fetchEnd(); 
     throw new FetchError(response, null, "Network error has occurred.");
   }
 
@@ -27,7 +58,7 @@ export default async function(url, params) {
       errorText = (body.error && body.error.message) || (body.data && body.data.error && body.data.error.message) || errorText;
     } catch (error) { /* ignore failed body */ }
 
-    fetchObserver.fetchEnd(); 
+    fetchState.fetchEnd(); 
 
     let message = `Error ${response.status}: ${errorText}`;
 
@@ -39,7 +70,7 @@ export default async function(url, params) {
   } catch (err) {
     throw new FetchError(response, null, err.message);
   } finally {
-    fetchObserver.fetchEnd(); 
+    fetchState.fetchEnd(); 
   }
 }
 
@@ -71,33 +102,4 @@ window.addEventListener('unhandledrejection', event => {
   }
 });
 
-class FetchObserver {
-  static #instance = null;
-  counter = 0;
-
-  constructor() {
-    if (!FetchObserver.#instance) 
-    FetchObserver.#instance = this;
-    else 
-      return FetchObserver.#instance; 
-  }
-
-  fetchStart() {
-    if (!this.counter)
-      document.dispatchEvent(new CustomEvent('fetch-active', {
-        bubbles: true
-      }));
-    this.counter++;
-  }
-
-  fetchEnd() {
-    if (!this.counter)
-      throw new Error('FetchObserver counter mismatch');
-    this.counter--;
-    if (!this.counter)
-      document.dispatchEvent(new CustomEvent('fetch-completed', {
-        bubbles: true
-      }));
-  }
-}
 

@@ -29,7 +29,7 @@ const DASH_ROUTE_PATH = '/'
 const PRICE_SLIDER_MIN = 0;
 const PRICE_SLIDER_MAX = 4000;
 
-export default class Page extends LJSBase {
+export default class Application extends LJSBase{
   routes = [
     {
       path: DASH_ROUTE_PATH,
@@ -45,6 +45,7 @@ export default class Page extends LJSBase {
   ];
 
   constructor() {
+
     super();
 
     if (typeof jest !== 'undefined')
@@ -62,18 +63,28 @@ export default class Page extends LJSBase {
 
     this.createEventListeners();
 
-    this.route = new Router(this.routes, this.routes[0], contentElement);
-    this.route(path);
+    this.router = new Router({
+      routes: this.routes,
+      defaultRoute: this.routes[0],
+      container: contentElement
+    });
+    this.router(path);
   }
 
   showNotificationSuccess(text) {
-    document.body.appendChild(this.createElement(this.getNotificationTemplate('success', text)));
-    setTimeout(this.removeNotification, 3000);
+    this.showNotification('success', text);
   }
 
   showNotificationError(text) {
-    document.body.appendChild(this.createElement(this.getNotificationTemplate('error', text)));
-    setTimeout(this.removeNotification, 3000);
+    this.showNotification('error', text);
+  }
+
+  showNotification(type, text) {
+    const element = this.createElement(this.getNotificationTemplate(type, text))
+    document.body.appendChild(element);
+    setTimeout(() => {
+      element.remove();
+    }, 3000);
   }
 
   getNotificationTemplate(type, text) {
@@ -86,16 +97,12 @@ export default class Page extends LJSBase {
       `);
   }
 
-  removeNotification() {
-    document.body.querySelector('.notification').remove();
-  }
-
   handleProductEditCompleted = event => {
     if (event.type === 'product-updated')
       this.showNotificationSuccess('Product updated');
     if (event.type === 'product-saved') {
       this.showNotificationSuccess('Product saved');
-      this.route(`${PRODUCTS_ROUTE_PATH}/${event.detail}`);
+      this.router(`${PRODUCTS_ROUTE_PATH}/${event.detail}`);
     }
   }
 
