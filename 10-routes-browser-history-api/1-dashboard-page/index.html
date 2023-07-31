@@ -2,11 +2,15 @@
 <meta charset="utf-8">
 
 <head>
+  <script>
+    const path = window.location.pathname;
+    const serverRoot = '/10-routes-browser-history-api/1-dashboard-page/';
+    window.history.replaceState(null, '', serverRoot);
+  </script>
   <title>Админка для магазина</title>
   <link rel="apple-touch-icon-precomposed" href="./assets/favicon/apple-touch-icon-precomposed.png">
   <link rel="icon" href="./assets/favicon/favicon.png">
-  <link rel="stylesheet" href="./styles/all.css">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="course-js.javascript.ru_styles.css">
 </head>
 
 <body>
@@ -58,13 +62,11 @@
   import Page from './index.js';
 
   const contentNode = document.querySelector('#content');
-
+ 
   async function initialize () {
     const page = new Page();
-    const element = await page.render();
+    const element = await page.render(path, contentNode);
 
-    contentNode.innerHTML = '';
-    contentNode.append(element);
   }
 
   initialize();
